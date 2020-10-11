@@ -3,7 +3,6 @@ package gofair
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -39,8 +38,6 @@ func (b *Betting) Request(url string, params *Params, v interface{}) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(string(bytes))
 
 	body := strings.NewReader(string(bytes))
 

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"streaming"
+	streaming "github.com/belmegatron/gofair/streaming"
 )
 
 func (h *Historical) ParseHistoricalData(directory string, listener streaming.Listener) error {

@@ -1,10 +1,10 @@
 package streaming
 
 type Listener struct {
-	MarketStream *MarketStream
-	OrderStream  Stream
-	UniqueId     int64
-	OutputChannel	chan MarketBook  //todo change to interface so that OrderBook can be accepted
+	MarketStream  *MarketStream
+	OrderStream   Stream
+	UniqueId      int64
+	OutputChannel chan MarketBook //todo change to interface so that OrderBook can be accepted
 }
 
 func (l *Listener) AddMarketStream() {

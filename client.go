@@ -2,8 +2,8 @@ package gofair
 
 import (
 	"crypto/tls"
-	"time"
 	"strings"
+	"time"
 )
 
 // betfair api endpoints
@@ -17,11 +17,11 @@ const (
 
 // holds login data
 type Config struct {
-	Username string
-	Password string
-	AppKey   string
-	CertFile string
-	KeyFile  string
+	Username string `json:"username"`
+	Password string `json:"password"`
+	AppKey   string `json:"api_key"`
+	CertFile string `json:"ssl_cert"`
+	KeyFile  string `json:"ssl_key"`
 	Locale   string
 }
 

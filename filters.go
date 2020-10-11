@@ -20,12 +20,3 @@ type MarketFilter struct {
 	MarketStartTime    TimeRangeFilter `json:"marketStartTime,omitempty"`
 	WithOrders         string          `json:"withOrders,omitempty"`
 }
-
-type Params struct {
-	MarketFilter     MarketFilter `json:"filter,omitempty"`
-	MaxResults       int          `json:"maxResults,omitempty"`
-	Granularity      string       `json:"granularity,omitempty"`
-	MarketProjection []string     `json:"marketProjection,omitempty"`
-	Sort             string       `json:"sort,omitempty"`
-	Locale           string       `json:"locale,omitempty"`
-}

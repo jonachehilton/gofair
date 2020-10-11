@@ -146,8 +146,8 @@ type PriceSize struct {
 // sort.Interface for []PriceSize based on price
 type ByPrice []PriceSize
 
-func (a ByPrice) Len() int			{ return len(a) }
-func (a ByPrice) Swap(i, j int)		{ a[i], a[j] = a[j], a[i] }
+func (a ByPrice) Len() int           { return len(a) }
+func (a ByPrice) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByPrice) Less(i, j int) bool { return a[i].Price < a[j].Price }
 
 type PositionPriceSize struct {
@@ -159,8 +159,8 @@ type PositionPriceSize struct {
 // sort.Interface for []PositionPriceSize based on position
 type ByPosition []PositionPriceSize
 
-func (a ByPosition) Len() int			{ return len(a) }
-func (a ByPosition) Swap(i, j int)		{ a[i], a[j] = a[j], a[i] }
+func (a ByPosition) Len() int           { return len(a) }
+func (a ByPosition) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByPosition) Less(i, j int) bool { return a[i].Position < a[j].Position }
 
 type AvailablePosition struct {
@@ -372,18 +372,18 @@ func (cache *MarketCache) GetRunnerDefinition(selectionId int64) RunnerDefinitio
 func (cache *RunnerCache) Snap(definition RunnerDefinition) Runner {
 	exchangePrices := ExchangePrices{
 		AvailableToBack: cache.AvailableToBack.Prices,
-		AvailableToLay: cache.AvailableToLay.Prices,
-		TradedVolume: cache.Traded.Prices,
+		AvailableToLay:  cache.AvailableToLay.Prices,
+		TradedVolume:    cache.Traded.Prices,
 	}
 	return Runner{
-		SelectionId: cache.SelectionId,
-		Handicap: definition.Handicap,
-		Status: definition.Status,
+		SelectionId:      cache.SelectionId,
+		Handicap:         definition.Handicap,
+		Status:           definition.Status,
 		AdjustmentFactor: definition.AdjustmentFactor,
-		LastPriceTraded: *cache.LastTradedPrice,
-		TotalMatched: *cache.TradedVolume,
-		RemovalDate: definition.RemovalDate,
-		EX: exchangePrices,
+		LastPriceTraded:  *cache.LastTradedPrice,
+		TotalMatched:     *cache.TradedVolume,
+		RemovalDate:      definition.RemovalDate,
+		EX:               exchangePrices,
 	}
 }
 
@@ -395,20 +395,20 @@ func (cache *MarketCache) Snap() MarketBook {
 		runners = append(runners, runner.Snap(runnerDefinition))
 	}
 	return MarketBook{
-		PublishTime: *cache.PublishTime,
-		MarketId:	cache.MarketId,
-		Status: cache.MarketDefinition.Status,
-		BetDelay: cache.MarketDefinition.BetDelay,
-		BspReconciled: cache.MarketDefinition.BspReconciled,
-		Complete: cache.MarketDefinition.Complete,
-		Inplay: cache.MarketDefinition.Inplay,
-		NumberOfWinners: cache.MarketDefinition.NumberOfWinners,
-		NumberOfRunners: len(cache.Runners),
+		PublishTime:           *cache.PublishTime,
+		MarketId:              cache.MarketId,
+		Status:                cache.MarketDefinition.Status,
+		BetDelay:              cache.MarketDefinition.BetDelay,
+		BspReconciled:         cache.MarketDefinition.BspReconciled,
+		Complete:              cache.MarketDefinition.Complete,
+		Inplay:                cache.MarketDefinition.Inplay,
+		NumberOfWinners:       cache.MarketDefinition.NumberOfWinners,
+		NumberOfRunners:       len(cache.Runners),
 		NumberOfActiveRunners: cache.MarketDefinition.NumberOfActiveRunners,
-		TotalMatched: *cache.TradedVolume,
-		CrossMatching: cache.MarketDefinition.CrossMatching,
-		RunnersVoidable: cache.MarketDefinition.RunnersVoidable,
-		Version: cache.MarketDefinition.Version,
-		Runners: runners,
+		TotalMatched:          *cache.TradedVolume,
+		CrossMatching:         cache.MarketDefinition.CrossMatching,
+		RunnersVoidable:       cache.MarketDefinition.RunnersVoidable,
+		Version:               cache.MarketDefinition.Version,
+		Runners:               runners,
 	}
 }

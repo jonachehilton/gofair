@@ -216,7 +216,7 @@ func (b *Betting) PlaceOrders(marketID string, placeInstructions []PlaceInstruct
 
 	params := new(Params)
 	params.MarketID = marketID
-	params.PlaceInstructions = placeInstructions
+	params.Instructions = placeInstructions
 
 	var response PlaceExecutionReport
 

@@ -32,8 +32,6 @@ func logError(data []byte) error {
 }
 
 func (b *Betting) Request(url string, params *Params, v interface{}) error {
-	//params.Locale = b.Client.config.Locale
-
 	bytes, err := json.Marshal(params)
 	if err != nil {
 		return err

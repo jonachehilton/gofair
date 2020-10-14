@@ -3,21 +3,21 @@ package gofair
 import "time"
 
 type eventType struct {
-	Id   string `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
-type eventTypeResult struct {
+type EventTypeResult struct {
 	MarketCount int       `json:"marketCount"`
 	EventType   eventType `json:"eventType"`
 }
 
 type competition struct {
-	Id   string `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
-type competitionResult struct {
+type CompetitionResult struct {
 	MarketCount       int         `json:"marketCount"`
 	CompetitionRegion string      `json:"competitionRegion"`
 	Competition       competition `json:"competition"`
@@ -28,7 +28,7 @@ type timeRange struct {
 	To   time.Time `json:"to"`
 }
 
-type timeRangeResult struct {
+type TimeRangeResult struct {
 	MarketCount int       `json:"marketCount"`
 	TimeRange   timeRange `json:"timeRange"`
 }
@@ -42,22 +42,22 @@ type event struct {
 	Venue       string `json:"venue"`
 }
 
-type eventResult struct {
+type EventResult struct {
 	MarketCount int   `json:"marketCount"`
 	Event       event `json:"event"`
 }
 
-type marketTypeResult struct {
+type MarketTypeResult struct {
 	MarketCount int    `json:"marketCount"`
 	MarketType  string `json:"marketType"`
 }
 
-type countryResult struct {
+type CountryResult struct {
 	MarketCount int    `json:"marketCount"`
 	CountryCode string `json:"countryCode"`
 }
 
-type venueResult struct {
+type VenueResult struct {
 	MarketCount int    `json:"marketCount"`
 	Venue       string `json:"venue"`
 }
@@ -115,11 +115,11 @@ type marketCatalogueDescription struct {
 }
 
 type metadata struct {
-	RunnerId int `json:"runnerId"`
+	RunnerID int `json:"runnerId"`
 }
 
 type runnerCatalogue struct {
-	SelectionId  int     `json:"selectionId"`
+	SelectionID  int     `json:"selectionId"`
 	RunnerName   string  `json:"runnerName"`
 	SortPriority int     `json:"sortPriority"`
 	Handicap     float32 `json:"handicap"`
@@ -141,19 +141,20 @@ type PriceProjection struct {
 }
 
 type Params struct {
-	MarketID            string             `json:"marketId,omitempty"`
-	MarketIDs           []string           `json:"marketIds,omitempty"`
-	MarketFilter        *MarketFilter      `json:"filter,omitempty"`
-	MaxResults          int                `json:"maxResults,omitempty"`
-	Granularity         string             `json:"granularity,omitempty"`
-	MarketProjection    []string           `json:"marketProjection,omitempty"`
-	OrderProjection     orderProjection    `json:"orderProjection,omitempty"`
-	MatchProjection     matchProjection    `json:"matchProjection,omitempty"`
-	PriceProjection     *PriceProjection   `json:"priceProjection,omitempty"`
-	Sort                string             `json:"sort,omitempty"`
-	Locale              string             `json:"locale,omitempty"`
-	IsMarketDataDelayed bool               `json:"isMarketDataDelayed,omitempty"`
-	Instructions        []PlaceInstruction `json:"instructions,omitempty"`
+	MarketID            string              `json:"marketId,omitempty"`
+	MarketIDs           []string            `json:"marketIds,omitempty"`
+	MarketFilter        *MarketFilter       `json:"filter,omitempty"`
+	MaxResults          int                 `json:"maxResults,omitempty"`
+	Granularity         string              `json:"granularity,omitempty"`
+	MarketProjection    []string            `json:"marketProjection,omitempty"`
+	OrderProjection     orderProjection     `json:"orderProjection,omitempty"`
+	MatchProjection     matchProjection     `json:"matchProjection,omitempty"`
+	PriceProjection     *PriceProjection    `json:"priceProjection,omitempty"`
+	Sort                string              `json:"sort,omitempty"`
+	Locale              string              `json:"locale,omitempty"`
+	IsMarketDataDelayed bool                `json:"isMarketDataDelayed,omitempty"`
+	PlaceInstructions   []PlaceInstruction  `json:"instructions,omitempty"`
+	CancelInstructions  []CancelInstruction `json:"instructions,omitempty"`
 }
 
 type LimitOrder struct {
@@ -169,6 +170,27 @@ type LimitOnCloseOrder struct {
 
 type MarketOnCloseOrder struct {
 	Liability float32 `json:"liability,omitempty"`
+}
+
+type CancelInstruction struct {
+	BetID         string  `json:"betId"`
+	SizeReduction float32 `json:"sizeReduction,omitempty"`
+}
+
+type CancelExecutionReport struct {
+	CustomerRef        string                    `json:"customerRef"`
+	Status             string                    `json:"status"`
+	ErrorCode          string                    `json:"errorCode"`
+	MarketID           string                    `json:"marketId"`
+	InstructionReports []CancelInstructionReport `json:"instructionReports"`
+}
+
+type CancelInstructionReport struct {
+	Status        string            `json:"status"`
+	ErrorCode     string            `json:"errorCode"`
+	Instruction   CancelInstruction `json:"instruction"`
+	SizeCancelled float32           `json:"sizeCancelled"`
+	CancelledDate time.Time         `json:"cancelledDate"`
 }
 
 type PlaceInstruction struct {

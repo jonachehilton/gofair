@@ -17,7 +17,7 @@ type logoutResult struct {
 
 func (c *Client) Logout() (logoutResult, error) {
 	// build url
-	url := createUrl(identity_url, "logout")
+	url := createURL(identityURL, "logout")
 
 	// make request
 	resp, err := logoutRequest(c, url)

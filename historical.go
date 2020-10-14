@@ -3,9 +3,9 @@ package gofair
 import (
 	"bufio"
 	"encoding/json"
+	streaming "github.com/belmegatron/gofair/streaming"
 	"log"
 	"os"
-	streaming "github.com/belmegatron/gofair/streaming"
 )
 
 func (h *Historical) ParseHistoricalData(directory string, listener streaming.Listener) error {

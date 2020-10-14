@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func createUrl(endpoint string, method string) string {
+func createURL(endpoint string, method string) string {
 	return endpoint + method
 }
 
@@ -70,10 +70,9 @@ func (b *Betting) Request(url string, params *Params, v interface{}) error {
 	if resp.StatusCode != 200 {
 		logError(data)
 		return errors.New(resp.Status)
-	} else {
-		if err := json.Unmarshal(data, v); err != nil {
-			return err
-		}
+	}
+	if err := json.Unmarshal(data, v); err != nil {
+		return err
 	}
 
 	return nil

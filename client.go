@@ -8,14 +8,14 @@ import (
 
 // betfair api endpoints
 const (
-	login_url       = "https://identitysso-api.betfair.com/api/"
-	identity_url    = "https://identitysso.betfair.com/api/"
-	api_betting_url = "https://api.betfair.com/exchange/betting/rest/v1.0/"
-	api_account_url = "https://api.betfair.com/exchange/account/rest/v1.0/"
-	navigation_url  = "https://api.betfair.com/exchange/betting/rest/v1/en/navigation/menu.json"
+	loginURL      = "https://identitysso-api.betfair.com/api/"
+	identityURL   = "https://identitysso.betfair.com/api/"
+	apiBettingURL = "https://api.betfair.com/exchange/betting/rest/v1.0/"
+	apiAccountURL = "https://api.betfair.com/exchange/account/rest/v1.0/"
+	navigationURL = "https://api.betfair.com/exchange/betting/rest/v1/en/navigation/menu.json"
 )
 
-// holds login data
+// Config holds login data
 type Config struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -31,7 +31,7 @@ type session struct {
 	LoginTime    time.Time
 }
 
-// main client object
+// Client main client object
 type Client struct {
 	config       *Config
 	session      *session
@@ -42,27 +42,27 @@ type Client struct {
 	Historical   *Historical
 }
 
-// betting object
+// Betting object
 type Betting struct {
 	Client *Client
 }
 
-// account object
+// Account object
 type Account struct {
 	Client *Client
 }
 
-// streaming object
+// Streaming object
 type Streaming struct {
 	Client *Client
 }
 
-// historical object
+// Historical object
 type Historical struct {
 	Client *Client
 }
 
-// creates new client
+// NewClient creates a new Betfiar client.
 func NewClient(config *Config) (*Client, error) {
 	c := new(Client)
 
@@ -107,16 +107,14 @@ func NewClient(config *Config) (*Client, error) {
 	return c, nil
 }
 
+// SessionExpired returns True if client not logged in or expired, betfair requires keep alive every 4hrs (20mins ITA)
 func (c *Client) SessionExpired() bool {
-	// returns True if client not logged in or expired
-	// betfair requires keep alive every 4hrs (20mins ITA)
 	if c.session.SessionToken == "" {
 		return true
 	}
 	duration := time.Since(c.session.LoginTime)
 	if duration.Minutes() > 200 {
 		return true
-	} else {
-		return false
 	}
+	return false
 }

@@ -14,7 +14,7 @@ type keepAliveResult struct {
 
 func (c *Client) KeepAlive() (keepAliveResult, error) {
 	// build url
-	url := createUrl(identity_url, "keepAlive")
+	url := createURL(identityURL, "keepAlive")
 
 	// make request
 	resp, err := logoutRequest(c, url)

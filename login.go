@@ -20,7 +20,7 @@ func (c *Client) Login() (loginResult, error) {
 	body := strings.NewReader("username=" + c.config.Username + "&password=" + c.config.Password)
 
 	// build url
-	url := createUrl(login_url, "certlogin")
+	url := createURL(loginURL, "certlogin")
 
 	// make request
 	resp, err := loginRequest(c, url, body)

@@ -31,10 +31,65 @@ func logError(data []byte) error {
 	return nil
 }
 
+func (params *Params) MarshalJSON() ([]byte, error) {
+
+	placeInstructionCount := len(params.PlaceInstructions)
+	cancelInstructionCount := len(params.CancelInstructions)
+
+	if (placeInstructionCount > 0) && (cancelInstructionCount == 0) {
+		type alias struct {
+			MarketID            string              `json:"marketId,omitempty"`
+			MarketIDs           []string            `json:"marketIds,omitempty"`
+			MarketFilter        *MarketFilter       `json:"filter,omitempty"`
+			MaxResults          int                 `json:"maxResults,omitempty"`
+			Granularity         string              `json:"granularity,omitempty"`
+			MarketProjection    []string            `json:"marketProjection,omitempty"`
+			OrderProjection     orderProjection     `json:"orderProjection,omitempty"`
+			MatchProjection     matchProjection     `json:"matchProjection,omitempty"`
+			PriceProjection     *PriceProjection    `json:"priceProjection,omitempty"`
+			Sort                string              `json:"sort,omitempty"`
+			Locale              string              `json:"locale,omitempty"`
+			IsMarketDataDelayed bool                `json:"isMarketDataDelayed,omitempty"`
+			PlaceInstructions   []PlaceInstruction  `json:"instructions,omitempty"`
+			CancelInstructions  []CancelInstruction `json:"cancelInstructions,omitempty"`
+		}
+
+		var a alias = alias(*params)
+		return json.Marshal(&a)
+
+	} else if (cancelInstructionCount > 0) && (placeInstructionCount == 0) {
+		type alias struct {
+			MarketID            string              `json:"marketId,omitempty"`
+			MarketIDs           []string            `json:"marketIds,omitempty"`
+			MarketFilter        *MarketFilter       `json:"filter,omitempty"`
+			MaxResults          int                 `json:"maxResults,omitempty"`
+			Granularity         string              `json:"granularity,omitempty"`
+			MarketProjection    []string            `json:"marketProjection,omitempty"`
+			OrderProjection     orderProjection     `json:"orderProjection,omitempty"`
+			MatchProjection     matchProjection     `json:"matchProjection,omitempty"`
+			PriceProjection     *PriceProjection    `json:"priceProjection,omitempty"`
+			Sort                string              `json:"sort,omitempty"`
+			Locale              string              `json:"locale,omitempty"`
+			IsMarketDataDelayed bool                `json:"isMarketDataDelayed,omitempty"`
+			PlaceInstructions   []PlaceInstruction  `json:"placeInstructions,omitempty"`
+			CancelInstructions  []CancelInstruction `json:"instructions,omitempty"`
+		}
+
+		var a alias = alias(*params)
+		return json.Marshal(&a)
+
+	} else if (cancelInstructionCount == 0) && (placeInstructionCount == 0) {
+		return json.Marshal(params)
+	} else {
+		empty := make([]byte, 0)
+		return empty, errors.New("Multiple Instructions found")
+	}
+}
+
 func (b *Betting) Request(url string, params *Params, v interface{}) error {
 	//params.Locale = b.Client.config.Locale
 
-	bytes, err := json.Marshal(params)
+	bytes, err := params.MarshalJSON()
 	if err != nil {
 		return err
 	}

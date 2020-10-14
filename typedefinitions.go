@@ -153,8 +153,8 @@ type Params struct {
 	Sort                string              `json:"sort,omitempty"`
 	Locale              string              `json:"locale,omitempty"`
 	IsMarketDataDelayed bool                `json:"isMarketDataDelayed,omitempty"`
-	PlaceInstructions   []PlaceInstruction  `json:"instructions,omitempty"`
-	CancelInstructions  []CancelInstruction `json:"instructions,omitempty"`
+	PlaceInstructions   []PlaceInstruction  `json:"placeInstructions,omitempty"`
+	CancelInstructions  []CancelInstruction `json:"cancelInstructions,omitempty"`
 }
 
 type LimitOrder struct {

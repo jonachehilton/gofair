@@ -140,11 +140,6 @@ type PriceProjection struct {
 	RollOverStakes        bool                  `json:"rolloverStakes"`
 }
 
-type instructionTypes struct {
-	PlaceInstructions  *[]PlaceInstruction
-	CancelInstructions *[]CancelInstruction
-}
-
 type LimitOrder struct {
 	Size            float32         `json:"size,omitempty"`
 	Price           float32         `json:"price,omitempty"`

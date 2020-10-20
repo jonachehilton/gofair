@@ -7,7 +7,7 @@ func (b *Betting) ListEventTypes(filter MarketFilter) ([]EventTypeResult, error)
 
 	// build request
 	params := struct {
-		MarketFilter MarketFilter `json:"marketFilter,omitempty"`
+		MarketFilter MarketFilter `json:"filter,omitempty"`
 	}{
 		filter,
 	}
@@ -29,7 +29,7 @@ func (b *Betting) ListCompetitions(filter MarketFilter) ([]CompetitionResult, er
 
 	// build request
 	params := struct {
-		MarketFilter MarketFilter `json:"marketFilter,omitempty"`
+		MarketFilter MarketFilter `json:"filter,omitempty"`
 	}{
 		filter,
 	}
@@ -51,7 +51,7 @@ func (b *Betting) ListTimeRanges(filter MarketFilter, granularity string) ([]Tim
 
 	// build request
 	params := struct {
-		MarketFilter MarketFilter `json:"marketFilter,omitempty"`
+		MarketFilter MarketFilter `json:"filter,omitempty"`
 		Granularity  string       `json:"granularity,omitempty"`
 	}{
 		filter,
@@ -75,7 +75,7 @@ func (b *Betting) ListEvents(filter MarketFilter) ([]EventResult, error) {
 
 	// build request
 	params := struct {
-		MarketFilter MarketFilter `json:"marketFilter,omitempty"`
+		MarketFilter MarketFilter `json:"filter,omitempty"`
 	}{
 		filter,
 	}
@@ -97,7 +97,7 @@ func (b *Betting) ListMarketTypes(filter MarketFilter) ([]MarketTypeResult, erro
 
 	// build request
 	params := struct {
-		MarketFilter MarketFilter `json:"marketFilter,omitempty"`
+		MarketFilter `json:"filter,omitempty"`
 	}{
 		filter,
 	}
@@ -119,7 +119,7 @@ func (b *Betting) ListCountries(filter MarketFilter) ([]CountryResult, error) {
 
 	// build request
 	params := struct {
-		marketFilter MarketFilter `json:"marketFilter,omitempty"`
+		filter MarketFilter `json:"filter,omitempty"`
 	}{
 		filter,
 	}
@@ -141,7 +141,7 @@ func (b *Betting) ListVenues(filter MarketFilter) ([]VenueResult, error) {
 
 	// build request
 	params := struct {
-		marketFilter MarketFilter `json:"marketFilter,omitempty"`
+		filter MarketFilter `json:"filter,omitempty"`
 	}{
 		filter,
 	}
@@ -164,7 +164,7 @@ func (b *Betting) ListMarketCatalogue(filter MarketFilter, marketProjection []st
 
 	// build request
 	params := struct {
-		MarketFilter     MarketFilter `json:"marketFilter,omitempty"`
+		MarketFilter     MarketFilter `json:"filter,omitempty"`
 		MarketProjection []string     `json:"marketProjection,omitempty"`
 		Sort             string       `json:"sort,omitempty"`
 		MaxResults       int          `json:"maxResults,omitempty"`

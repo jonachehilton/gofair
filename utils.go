@@ -31,9 +31,9 @@ func logError(data []byte) error {
 	return nil
 }
 
-func (b *Betting) Request(url string, v interface{}) error {
+func (b *Betting) Request(url string, params interface{}, v interface{}) error {
 
-	bytes, err := json.Marshal(v)
+	bytes, err := json.Marshal(params)
 
 	if err != nil {
 		return err

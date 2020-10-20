@@ -6,8 +6,11 @@ func (b *Betting) ListEventTypes(filter MarketFilter) ([]EventTypeResult, error)
 	url := createURL(apiBettingURL, "listEventTypes/")
 
 	// build request
-	params := new(Params)
-	params.MarketFilter = &filter
+	params := struct {
+		MarketFilter MarketFilter `json:"marketFilter,omitempty"`
+	}{
+		filter,
+	}
 
 	var response []EventTypeResult
 
@@ -25,8 +28,11 @@ func (b *Betting) ListCompetitions(filter MarketFilter) ([]CompetitionResult, er
 	url := createURL(apiBettingURL, "listCompetitions/")
 
 	// build request
-	params := new(Params)
-	params.MarketFilter = &filter
+	params := struct {
+		MarketFilter MarketFilter `json:"marketFilter,omitempty"`
+	}{
+		filter,
+	}
 
 	var response []CompetitionResult
 
@@ -44,9 +50,13 @@ func (b *Betting) ListTimeRanges(filter MarketFilter, granularity string) ([]Tim
 	url := createURL(apiBettingURL, "listTimeRanges/")
 
 	// build request
-	params := new(Params)
-	params.MarketFilter = &filter
-	params.Granularity = granularity
+	params := struct {
+		MarketFilter MarketFilter `json:"marketFilter,omitempty"`
+		Granularity  string       `json:"granularity,omitempty"`
+	}{
+		filter,
+		granularity,
+	}
 
 	var response []TimeRangeResult
 
@@ -64,8 +74,11 @@ func (b *Betting) ListEvents(filter MarketFilter) ([]EventResult, error) {
 	url := createURL(apiBettingURL, "listEvents/")
 
 	// build request
-	params := new(Params)
-	params.MarketFilter = &filter
+	params := struct {
+		MarketFilter MarketFilter `json:"marketFilter,omitempty"`
+	}{
+		filter,
+	}
 
 	var response []EventResult
 
@@ -83,8 +96,11 @@ func (b *Betting) ListMarketTypes(filter MarketFilter) ([]MarketTypeResult, erro
 	url := createURL(apiBettingURL, "listMarketTypes/")
 
 	// build request
-	params := new(Params)
-	params.MarketFilter = &filter
+	params := struct {
+		MarketFilter MarketFilter `json:"marketFilter,omitempty"`
+	}{
+		filter,
+	}
 
 	var response []MarketTypeResult
 
@@ -102,8 +118,11 @@ func (b *Betting) ListCountries(filter MarketFilter) ([]CountryResult, error) {
 	url := createURL(apiBettingURL, "listCountries/")
 
 	// build request
-	params := new(Params)
-	params.MarketFilter = &filter
+	params := struct {
+		marketFilter MarketFilter `json:"marketFilter,omitempty"`
+	}{
+		filter,
+	}
 
 	var response []CountryResult
 
@@ -121,8 +140,11 @@ func (b *Betting) ListVenues(filter MarketFilter) ([]VenueResult, error) {
 	url := createURL(apiBettingURL, "listVenues/")
 
 	// build request
-	params := new(Params)
-	params.MarketFilter = &filter
+	params := struct {
+		marketFilter MarketFilter `json:"marketFilter,omitempty"`
+	}{
+		filter,
+	}
 
 	var response []VenueResult
 
@@ -141,11 +163,17 @@ func (b *Betting) ListMarketCatalogue(filter MarketFilter, marketProjection []st
 	url := createURL(apiBettingURL, "listMarketCatalogue/")
 
 	// build request
-	params := new(Params)
-	params.MarketFilter = &filter
-	params.MarketProjection = marketProjection
-	params.Sort = sort
-	params.MaxResults = maxResults
+	params := struct {
+		MarketFilter     MarketFilter `json:"marketFilter,omitempty"`
+		MarketProjection []string     `json:"marketProjection,omitempty"`
+		Sort             string       `json:"sort,omitempty"`
+		MaxResults       int          `json:"maxResults,omitempty"`
+	}{
+		filter,
+		marketProjection,
+		sort,
+		maxResults,
+	}
 
 	var response []MarketCatalogue
 
@@ -164,19 +192,28 @@ func (b *Betting) ListMarketBook(marketIDs []string, displayOrders bool) ([]Mark
 	url := createURL(apiBettingURL, "listMarketBook/")
 
 	// build request
-	params := new(Params)
-	params.MarketIDs = marketIDs
-	params.IsMarketDataDelayed = false
 
-	if displayOrders == true {
-		params.OrderProjection = OrderProjection.Executable
-		params.MatchProjection = MatchProjection.RolledUpByAvgPrice
-	} else {
+	priceProjection := new(PriceProjection)
+
+	params := struct {
+		MarketIDs           []string         `json:"marketIds,omitempty"`
+		IsMarketDataDelayed bool             `json:"isMarketDataDelayed,omitempty"`
+		OrderProjection     orderProjection  `json:"orderProjection,omitempty"`
+		MatchProjection     matchProjection  `json:"matchProjection,omitempty"`
+		PriceProjection     *PriceProjection `json:"priceProjection,omitempty"`
+	}{
+		marketIDs,
+		false,
+		OrderProjection.Executable,
+		MatchProjection.RolledUpByAvgPrice,
+		priceProjection,
+	}
+
+	if displayOrders == false {
 		params.OrderProjection = OrderProjection.All
-		priceProjection := new(PriceProjection)
+		params.MatchProjection = ""
 		priceProjection.PriceData = append(priceProjection.PriceData, PriceData.ExBestOffers)
 		priceProjection.ExBestOffersOverrides.BestPricesDepth = 3
-		params.PriceProjection = priceProjection
 	}
 
 	var response []MarketBook
@@ -195,8 +232,11 @@ func (b *Betting) ListMarketProfitAndLoss(marketIDs []string) ([]MarketProfitAnd
 	url := createURL(apiBettingURL, "listMarketProfitAndLoss/")
 
 	// build request
-	params := new(Params)
-	params.MarketIDs = marketIDs
+	params := struct {
+		MarketIDs []string `json:"marketIds,omitempty"`
+	}{
+		marketIDs,
+	}
 
 	var response []MarketProfitAndLoss
 
@@ -212,11 +252,15 @@ func (b *Betting) ListMarketProfitAndLoss(marketIDs []string) ([]MarketProfitAnd
 func (b *Betting) PlaceOrders(marketID string, placeInstructions []PlaceInstruction) (PlaceExecutionReport, error) {
 	// create url
 	url := createURL(apiBettingURL, "placeOrders/")
-	// build request
 
-	params := new(Params)
-	params.MarketID = marketID
-	params.Instructions = placeInstructions
+	// build request
+	params := struct {
+		MarketID     string             `json:"marketId,omitempty"`
+		Instructions []PlaceInstruction `json:"instructions,omitempty"`
+	}{
+		marketID,
+		placeInstructions,
+	}
 
 	var response PlaceExecutionReport
 
@@ -232,11 +276,15 @@ func (b *Betting) PlaceOrders(marketID string, placeInstructions []PlaceInstruct
 func (b *Betting) CancelOrders(marketID string, cancelInstructions []CancelInstruction) (CancelExecutionReport, error) {
 	// create url
 	url := createURL(apiBettingURL, "cancelOrders/")
-	// build request
 
-	params := new(Params)
-	params.MarketID = marketID
-	params.CancelInstructions = cancelInstructions
+	// build request
+	params := struct {
+		MarketID     string              `json:"marketId,omitempty"`
+		Instructions []CancelInstruction `json:"instructions,omitempty"`
+	}{
+		marketID,
+		cancelInstructions,
+	}
 
 	var response CancelExecutionReport
 

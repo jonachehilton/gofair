@@ -145,22 +145,6 @@ type instructionTypes struct {
 	CancelInstructions *[]CancelInstruction
 }
 
-type Params struct {
-	MarketID            string           `json:"marketId,omitempty"`
-	MarketIDs           []string         `json:"marketIds,omitempty"`
-	MarketFilter        *MarketFilter    `json:"filter,omitempty"`
-	MaxResults          int              `json:"maxResults,omitempty"`
-	Granularity         string           `json:"granularity,omitempty"`
-	MarketProjection    []string         `json:"marketProjection,omitempty"`
-	OrderProjection     orderProjection  `json:"orderProjection,omitempty"`
-	MatchProjection     matchProjection  `json:"matchProjection,omitempty"`
-	PriceProjection     *PriceProjection `json:"priceProjection,omitempty"`
-	Sort                string           `json:"sort,omitempty"`
-	Locale              string           `json:"locale,omitempty"`
-	IsMarketDataDelayed bool             `json:"isMarketDataDelayed,omitempty"`
-	Instructions        instructionTypes `json:"instructions,omitempty"`
-}
-
 type LimitOrder struct {
 	Size            float32         `json:"size,omitempty"`
 	Price           float32         `json:"price,omitempty"`

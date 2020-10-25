@@ -1,55 +1,97 @@
 package gofair
 
 type orderProjection string
-
-var OrderProjection = struct {
-	All, Executable, ExecutionComplete orderProjection
-}{"ALL", "EXECUTABLE", "EXECUTION_COMPLETE"}
-
 type priceData string
-
-var PriceData = struct {
-	SPAvailable, SPTraded, ExBestOffers, ExAllOffers, ExTraded priceData
-}{"SP_AVAILABLE", "SP_TRADED", "EX_BEST_OFFERS", "EX_ALL_OFFERS", "EX_TRADED"}
-
 type matchProjection string
-
-var MatchProjection = struct {
-	NoRollup, RolledUpByPrice, RolledUpByAvgPrice matchProjection
-}{"NO_ROLLUP", "ROLLED_UP_BY_PRICE", "ROLLED_UP_BY_AVG_PRICE"}
-
 type marketStatus string
-
-var MarketStatus = struct {
-	Inactive, Open, Suspended, Closed marketStatus
-}{"INACTIVE", "OPEN", "SUSPENDED", "CLOSED"}
-
 type persistenceType string
-
-var PersistenceType = struct {
-	Lapse, Persist, MarketOnClose persistenceType
-}{"LAPSE", "PERSIST", "MARKET_ON_CLOSE"}
-
 type orderType string
-
-var OrderType = struct {
-	Limit, LimitOnClose, MarketOnClose orderType
-}{"LIMIT", "LIMIT_ON_CLOSE", "MARKET_ON_CLOSE"}
-
 type orderStatus string
-
-var OrderStatus = struct {
-	Pending, ExecutionComplete, Executable, Expired orderStatus
-}{"PENDING", "EXECUTION_COMPLETE", "EXECUTABLE", "EXPIRED"}
-
 type side string
+type executionReportStatus string
+type instructionReportStatus string
+type executionReportErrorCode string
 
-var Side = struct {
-	Back, Lay side
-}{"BACK", "LAY"}
-
+// WeightConstant should be the type specified for const values relating to request limit calculations
+// https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Market+Data+Request+Limits
 type WeightConstant int
 
+// OrderProjection describes the orders you want to receive in the response.
+var OrderProjection = struct {
+	All, Executable, ExecutionComplete orderProjection
+}{
+	All:               "ALL",
+	Executable:        "EXECUTABLE",
+	ExecutionComplete: "EXECUTION_COMPLETE",
+}
+
+// PriceData describes the basic price data you want to receive in the response.
+var PriceData = struct {
+	SPAvailable, SPTraded, ExBestOffers, ExAllOffers, ExTraded priceData
+}{
+	SPAvailable:  "SP_AVAILABLE",
+	SPTraded:     "SP_TRADED",
+	ExBestOffers: "EX_BEST_OFFERS",
+	ExAllOffers:  "EX_ALL_OFFERS",
+	ExTraded:     "EX_TRADED",
+}
+
+// MatchProjection describes the matches you want to receive in the response.
+var MatchProjection = struct {
+	NoRollup, RolledUpByPrice, RolledUpByAvgPrice matchProjection
+}{
+	NoRollup:           "NO_ROLLUP",
+	RolledUpByPrice:    "ROLLED_UP_BY_PRICE",
+	RolledUpByAvgPrice: "ROLLED_UP_BY_AVG_PRICE",
+}
+
+// MarketStatus describes the status of the market, for example OPEN, SUSPENDED, CLOSED (settled), etc.
+var MarketStatus = struct {
+	Inactive, Open, Suspended, Closed marketStatus
+}{
+	Inactive:  "INACTIVE",
+	Open:      "OPEN",
+	Suspended: "SUSPENDED",
+	Closed:    "CLOSED",
+}
+
+// PersistenceType describes what to do with the order at turn-in-play.
+var PersistenceType = struct {
+	Lapse, Persist, MarketOnClose persistenceType
+}{
+	Lapse:         "LAPSE",
+	Persist:       "PERSIST",
+	MarketOnClose: "MARKET_ON_CLOSE",
+}
+
+// OrderType describes the BSP Order type.
+var OrderType = struct {
+	Limit, LimitOnClose, MarketOnClose orderType
+}{
+	Limit:         "LIMIT",
+	LimitOnClose:  "LIMIT_ON_CLOSE",
+	MarketOnClose: "MARKET_ON_CLOSE",
+}
+
+// OrderStatus should generally be either EXECUTABLE (an unmatched amount remains) or EXECUTION_COMPLETE (no unmatched amount remains).
+var OrderStatus = struct {
+	Pending, ExecutionComplete, Executable, Expired orderStatus
+}{
+	Pending:           "PENDING",
+	ExecutionComplete: "EXECUTION_COMPLETE",
+	Executable:        "EXECUTABLE",
+	Expired:           "EXPIRED",
+}
+
+// Side indicates if the bet is a Back or a Lay.
+var Side = struct {
+	Back, Lay side
+}{
+	Back: "BACK",
+	Lay:  "LAY",
+}
+
+// Weight is a measure used by the Betfair Exchange API to describe the relative amount of data a particular type of request is expected to return.
 var Weight = struct {
 	MaxWeight,
 	MarketDescription,
@@ -68,22 +110,42 @@ var Weight = struct {
 	ExBestOffersAndExTraded,
 	ExAllOffersAndExTraded,
 	NotApplicable WeightConstant
-}{200, 1, 1, 0, 0, 0, 1, 0, 2, 3, 7, 5, 17, 17, 20, 32, 4}
+}{
+	MaxWeight:               200,
+	MarketDescription:       1,
+	RunnerDescription:       1,
+	Event:                   0,
+	EventType:               0,
+	Competition:             0,
+	RunnerMetadata:          1,
+	MarketStartTime:         0,
+	NotSet:                  2,
+	SPAvailable:             3,
+	SPTraded:                7,
+	ExBestOffers:            5,
+	ExAllOffers:             17,
+	ExTraded:                17,
+	ExBestOffersAndExTraded: 20,
+	ExAllOffersAndExTraded:  32,
+	NotApplicable:           4,
+}
 
-type executionReportStatus string
-
+// ExecutionReportStatus describes the outcome of placing an order.
 var ExecutionReportStatus = struct {
 	Success, Failure, ProcessedWithErrors, Timeout executionReportStatus
-}{"SUCCESS", "FAILURE", "PROCESSED_WITH_ERRORS", "TIMEOUT"}
+}{
+	Success:             "SUCCESS",
+	Failure:             "FAILURE",
+	ProcessedWithErrors: "PROCESSED_WITH_ERRORS",
+	Timeout:             "TIMEOUT",
+}
 
-type instructionReportStatus string
-
+// InstructionReportStatus describes the outcome of a particular instruction being submitted.
 var InstructionReportStatus = struct {
 	Success, Failure, Timeout instructionReportStatus
 }{"SUCCESS", "FAILURE", "TIMEOUT"}
 
-type executionReportErrorCode string
-
+// ExecutionReportErrorCode describes the potential errors contained within a PlaceExecutionReport.
 var ExecutionReportErrorCode = struct {
 	ErrorInMatcher,
 	ProcessedWithErrors,
@@ -107,29 +169,46 @@ var ExecutionReportErrorCode = struct {
 	TooManyInstructions,
 	InvalidMarketVersion,
 	InvalidProfitRatio executionReportErrorCode
-}{"ERROR_IN_MATCHER",
-	"PROCESSED_WITH_ERRORS",
-	"BET_ACTION_ERROR",
-	"INVALID_ACCOUNT_STATE",
-	"INVALID_WALLET_STATUS",
-	"INSUFFICIENT_FUNDS",
-	"LOSS_LIMIT_EXCEEDED",
-	"MARKET_SUSPENDED",
-	"MARKET_NOT_OPEN_FOR_BETTING",
-	"DUPLICATE_TRANSACTION",
-	"INVALID_ORDER",
-	"INVALID_MARKET_ID",
-	"PERMISSION_DENIED",
-	"DUPLICATE_BETIDS",
-	"NO_ACTION_REQUIRED",
-	"SERVICE_UNAVAILABLE",
-	"REJECTED_BY_REGULATOR",
-	"NO_CHASING",
-	"REGULATOR_IS_NOT_AVAILABLE",
-	"TOO_MANY_INSTRUCTIONS",
-	"INVALID_MARKET_VERSION",
-	"INVALID_PROFIT_RATIO"}
+}{
+	ErrorInMatcher:          "ERROR_IN_MATCHER",
+	ProcessedWithErrors:     "PROCESSED_WITH_ERRORS",
+	BetActionError:          "BET_ACTION_ERROR",
+	InvalidAccountState:     "INVALID_ACCOUNT_STATE",
+	InvalidWalletStatus:     "INVALID_WALLET_STATUS",
+	InsufficientFunds:       "INSUFFICIENT_FUNDS",
+	LossLimitExceeded:       "LOSS_LIMIT_EXCEEDED",
+	MarketSuspended:         "MARKET_SUSPENDED",
+	MarketNotOpenForBetting: "MARKET_NOT_OPEN_FOR_BETTING",
+	DuplicateTransaction:    "DUPLICATE_TRANSACTION",
+	InvalidOrder:            "INVALID_ORDER",
+	InvalidMarketID:         "INVALID_MARKET_ID",
+	PermissionDenied:        "PERMISSION_DENIED",
+	DuplicateBetIDs:         "DUPLICATE_BETIDS",
+	NoActionRequired:        "NO_ACTION_REQUIRED",
+	ServiceUnavailable:      "SERVICE_UNAVAILABLE",
+	RejectedByRegulator:     "REJECTED_BY_REGULATOR",
+	NoChasing:               "NO_CHASING",
+	RegulatorIsNotAvailable: "REGULATOR_IS_NOT_AVAILABLE",
+	TooManyInstructions:     "TOO_MANY_INSTRUCTIONS",
+	InvalidMarketVersion:    "INVALID_MARKET_VERSION",
+	InvalidProfitRatio:      "INVALID_PROFIT_RATIO",
+}
 
 const (
-	MinStakeSizeGBP = 2.00
+	MinimumStakeSizeGBP = 2.00
 )
+
+// Endpoints contains all the Betfair Exchange API endpoints.
+var Endpoints = struct {
+	Login,
+	Identity,
+	Betting,
+	Account,
+	Navigation string
+}{
+	Login:      "https://identitysso-api.betfair.com/api/",
+	Identity:   "https://identitysso.betfair.com/api/",
+	Betting:    "https://api.betfair.com/exchange/betting/rest/v1.0/",
+	Account:    "https://api.betfair.com/exchange/account/rest/v1.0/",
+	Navigation: "https://api.betfair.com/exchange/betting/rest/v1/en/navigation/menu.json",
+}

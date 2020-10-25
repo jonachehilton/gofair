@@ -3,13 +3,13 @@ package gofair
 // ListEventTypes returns a list of Event Types (i.e. Sports) associated with the markets selected by the MarketFilter.
 func (b *Betting) ListEventTypes(filter MarketFilter) ([]EventTypeResult, error) {
 	// create url
-	url := createURL(apiBettingURL, "listEventTypes/")
+	url := createURL(Endpoints.Betting, "listEventTypes/")
 
 	// build request
 	params := struct {
-		MarketFilter MarketFilter `json:"filter,omitempty"`
+		Filter MarketFilter `json:"filter,omitempty"`
 	}{
-		filter,
+		Filter: filter,
 	}
 
 	var response []EventTypeResult
@@ -25,13 +25,13 @@ func (b *Betting) ListEventTypes(filter MarketFilter) ([]EventTypeResult, error)
 // ListCompetitions returns a list of Competitions (i.e., World Cup 2013) associated with the markets selected by the MarketFilter. Currently only Football markets have an associated competition.
 func (b *Betting) ListCompetitions(filter MarketFilter) ([]CompetitionResult, error) {
 	// create url
-	url := createURL(apiBettingURL, "listCompetitions/")
+	url := createURL(Endpoints.Betting, "listCompetitions/")
 
 	// build request
 	params := struct {
-		MarketFilter MarketFilter `json:"filter,omitempty"`
+		Filter MarketFilter `json:"filter,omitempty"`
 	}{
-		filter,
+		Filter: filter,
 	}
 
 	var response []CompetitionResult
@@ -47,15 +47,15 @@ func (b *Betting) ListCompetitions(filter MarketFilter) ([]CompetitionResult, er
 // ListTimeRanges returns a list of time ranges in the granularity specified in the request (i.e. 3PM to 4PM, Aug 14th to Aug 15th) associated with the markets selected by the MarketFilter.
 func (b *Betting) ListTimeRanges(filter MarketFilter, granularity string) ([]TimeRangeResult, error) {
 	// create url
-	url := createURL(apiBettingURL, "listTimeRanges/")
+	url := createURL(Endpoints.Betting, "listTimeRanges/")
 
 	// build request
 	params := struct {
-		MarketFilter MarketFilter `json:"filter,omitempty"`
-		Granularity  string       `json:"granularity,omitempty"`
+		Filter      MarketFilter `json:"filter,omitempty"`
+		Granularity string       `json:"granularity,omitempty"`
 	}{
-		filter,
-		granularity,
+		Filter:      filter,
+		Granularity: granularity,
 	}
 
 	var response []TimeRangeResult
@@ -71,13 +71,13 @@ func (b *Betting) ListTimeRanges(filter MarketFilter, granularity string) ([]Tim
 // ListEvents returns a list of Events (i.e, Reading vs. Man United) associated with the markets selected by the MarketFilter.
 func (b *Betting) ListEvents(filter MarketFilter) ([]EventResult, error) {
 	// create url
-	url := createURL(apiBettingURL, "listEvents/")
+	url := createURL(Endpoints.Betting, "listEvents/")
 
 	// build request
 	params := struct {
-		MarketFilter MarketFilter `json:"filter,omitempty"`
+		Filter MarketFilter `json:"filter,omitempty"`
 	}{
-		filter,
+		Filter: filter,
 	}
 
 	var response []EventResult
@@ -93,13 +93,13 @@ func (b *Betting) ListEvents(filter MarketFilter) ([]EventResult, error) {
 // ListMarketTypes returns a list of market types (i.e. MATCH_ODDS, NEXT_GOAL) associated with the markets selected by the MarketFilter. The market types are always the same, regardless of locale.
 func (b *Betting) ListMarketTypes(filter MarketFilter) ([]MarketTypeResult, error) {
 	// create url
-	url := createURL(apiBettingURL, "listMarketTypes/")
+	url := createURL(Endpoints.Betting, "listMarketTypes/")
 
 	// build request
 	params := struct {
-		MarketFilter `json:"filter,omitempty"`
+		Filter MarketFilter `json:"filter,omitempty"`
 	}{
-		filter,
+		Filter: filter,
 	}
 
 	var response []MarketTypeResult
@@ -115,13 +115,13 @@ func (b *Betting) ListMarketTypes(filter MarketFilter) ([]MarketTypeResult, erro
 // ListCountries returns a list of Countries associated with the markets selected by the MarketFilter.
 func (b *Betting) ListCountries(filter MarketFilter) ([]CountryResult, error) {
 	// create url
-	url := createURL(apiBettingURL, "listCountries/")
+	url := createURL(Endpoints.Betting, "listCountries/")
 
 	// build request
 	params := struct {
-		filter MarketFilter `json:"filter,omitempty"`
+		Filter MarketFilter `json:"filter,omitempty"`
 	}{
-		filter,
+		Filter: filter,
 	}
 
 	var response []CountryResult
@@ -137,13 +137,13 @@ func (b *Betting) ListCountries(filter MarketFilter) ([]CountryResult, error) {
 // ListVenues returns a list of Venues (i.e. Cheltenham, Ascot) associated with the markets selected by the MarketFilter. Currently, only Horse Racing markets are associated with a Venue.
 func (b *Betting) ListVenues(filter MarketFilter) ([]VenueResult, error) {
 	// create url
-	url := createURL(apiBettingURL, "listVenues/")
+	url := createURL(Endpoints.Betting, "listVenues/")
 
 	// build request
 	params := struct {
-		filter MarketFilter `json:"filter,omitempty"`
+		Filter MarketFilter `json:"filter,omitempty"`
 	}{
-		filter,
+		Filter: filter,
 	}
 
 	var response []VenueResult
@@ -160,19 +160,19 @@ func (b *Betting) ListVenues(filter MarketFilter) ([]VenueResult, error) {
 func (b *Betting) ListMarketCatalogue(filter MarketFilter, marketProjection []string, sort string, maxResults int) (
 	[]MarketCatalogue, error) {
 	// create url
-	url := createURL(apiBettingURL, "listMarketCatalogue/")
+	url := createURL(Endpoints.Betting, "listMarketCatalogue/")
 
 	// build request
 	params := struct {
-		MarketFilter     MarketFilter `json:"filter,omitempty"`
+		Filter           MarketFilter `json:"filter,omitempty"`
 		MarketProjection []string     `json:"marketProjection,omitempty"`
 		Sort             string       `json:"sort,omitempty"`
 		MaxResults       int          `json:"maxResults,omitempty"`
 	}{
-		filter,
-		marketProjection,
-		sort,
-		maxResults,
+		Filter:           filter,
+		MarketProjection: marketProjection,
+		Sort:             sort,
+		MaxResults:       maxResults,
 	}
 
 	var response []MarketCatalogue
@@ -189,7 +189,7 @@ func (b *Betting) ListMarketCatalogue(filter MarketFilter, marketProjection []st
 func (b *Betting) ListMarketBook(marketIDs []string, displayOrders bool) ([]MarketBook, error) {
 	// TODO: At some point need to expand the number of parameters this can take in order to provide more options to user.
 	// create url
-	url := createURL(apiBettingURL, "listMarketBook/")
+	url := createURL(Endpoints.Betting, "listMarketBook/")
 
 	// build request
 
@@ -202,11 +202,11 @@ func (b *Betting) ListMarketBook(marketIDs []string, displayOrders bool) ([]Mark
 		MatchProjection     matchProjection  `json:"matchProjection,omitempty"`
 		PriceProjection     *PriceProjection `json:"priceProjection,omitempty"`
 	}{
-		marketIDs,
-		false,
-		OrderProjection.Executable,
-		MatchProjection.RolledUpByAvgPrice,
-		priceProjection,
+		MarketIDs:           marketIDs,
+		IsMarketDataDelayed: false,
+		OrderProjection:     OrderProjection.Executable,
+		MatchProjection:     MatchProjection.RolledUpByAvgPrice,
+		PriceProjection:     priceProjection,
 	}
 
 	if displayOrders == false {
@@ -229,13 +229,13 @@ func (b *Betting) ListMarketBook(marketIDs []string, displayOrders bool) ([]Mark
 // ListMarketProfitAndLoss retrieves profit and loss for a given list of OPEN markets. The values are calculated using matched bets and optionally settled bets. Only odds (MarketBettingType = ODDS) markets  are implemented, markets of other types are silently ignored.
 func (b *Betting) ListMarketProfitAndLoss(marketIDs []string) ([]MarketProfitAndLoss, error) {
 	// create url
-	url := createURL(apiBettingURL, "listMarketProfitAndLoss/")
+	url := createURL(Endpoints.Betting, "listMarketProfitAndLoss/")
 
 	// build request
 	params := struct {
 		MarketIDs []string `json:"marketIds,omitempty"`
 	}{
-		marketIDs,
+		MarketIDs: marketIDs,
 	}
 
 	var response []MarketProfitAndLoss
@@ -251,15 +251,15 @@ func (b *Betting) ListMarketProfitAndLoss(marketIDs []string) ([]MarketProfitAnd
 // PlaceOrders allows new orders to be submitted into a market. Please note that additional bet sizing rules apply to bets placed into the Italian Exchange.
 func (b *Betting) PlaceOrders(marketID string, placeInstructions []PlaceInstruction) (PlaceExecutionReport, error) {
 	// create url
-	url := createURL(apiBettingURL, "placeOrders/")
+	url := createURL(Endpoints.Betting, "placeOrders/")
 
 	// build request
 	params := struct {
 		MarketID     string             `json:"marketId,omitempty"`
 		Instructions []PlaceInstruction `json:"instructions,omitempty"`
 	}{
-		marketID,
-		placeInstructions,
+		MarketID:     marketID,
+		Instructions: placeInstructions,
 	}
 
 	var response PlaceExecutionReport
@@ -275,15 +275,15 @@ func (b *Betting) PlaceOrders(marketID string, placeInstructions []PlaceInstruct
 // CancelOrders allows the user to cancel all bets OR cancel all bets on a market OR fully or partially cancel particular orders on a market. Only LIMIT orders can be cancelled or partially cancelled once placed.
 func (b *Betting) CancelOrders(marketID string, cancelInstructions []CancelInstruction) (CancelExecutionReport, error) {
 	// create url
-	url := createURL(apiBettingURL, "cancelOrders/")
+	url := createURL(Endpoints.Betting, "cancelOrders/")
 
 	// build request
 	params := struct {
 		MarketID     string              `json:"marketId,omitempty"`
 		Instructions []CancelInstruction `json:"instructions,omitempty"`
 	}{
-		marketID,
-		cancelInstructions,
+		MarketID:     marketID,
+		Instructions: cancelInstructions,
 	}
 
 	var response CancelExecutionReport

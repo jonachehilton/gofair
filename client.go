@@ -6,15 +6,6 @@ import (
 	"time"
 )
 
-// betfair api endpoints
-const (
-	loginURL      = "https://identitysso-api.betfair.com/api/"
-	identityURL   = "https://identitysso.betfair.com/api/"
-	apiBettingURL = "https://api.betfair.com/exchange/betting/rest/v1.0/"
-	apiAccountURL = "https://api.betfair.com/exchange/account/rest/v1.0/"
-	navigationURL = "https://api.betfair.com/exchange/betting/rest/v1/en/navigation/menu.json"
-)
-
 // Config holds login data
 type Config struct {
 	Username string `json:"username"`
@@ -48,14 +39,10 @@ type Betting struct {
 }
 
 // Account object
-type Account struct {
-	Client *Client
-}
+type Account struct{}
 
 // Streaming object
-type Streaming struct {
-	Client *Client
-}
+type Streaming struct{}
 
 // Historical object
 type Historical struct {
@@ -90,19 +77,15 @@ func NewClient(config *Config) (*Client, error) {
 
 	// create betting
 	c.Betting = new(Betting)
-	c.Betting.Client = c
 
 	// create account
 	c.Account = new(Account)
-	c.Account.Client = c
 
 	// create streaming
 	c.Streaming = new(Streaming)
-	c.Streaming.Client = c
 
 	// create historical
 	c.Historical = new(Historical)
-	c.Historical.Client = c
 
 	return c, nil
 }

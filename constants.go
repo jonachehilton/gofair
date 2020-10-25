@@ -143,7 +143,11 @@ var ExecutionReportStatus = struct {
 // InstructionReportStatus describes the outcome of a particular instruction being submitted.
 var InstructionReportStatus = struct {
 	Success, Failure, Timeout instructionReportStatus
-}{"SUCCESS", "FAILURE", "TIMEOUT"}
+}{
+	Success: "SUCCESS",
+	Failure: "FAILURE",
+	Timeout: "TIMEOUT",
+}
 
 // ExecutionReportErrorCode describes the potential errors contained within a PlaceExecutionReport.
 var ExecutionReportErrorCode = struct {

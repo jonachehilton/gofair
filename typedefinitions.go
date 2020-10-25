@@ -226,11 +226,13 @@ type Order struct {
 	CustomerStrategyRef string    `json:"customerStrategyRef"`
 }
 
+// KeyLineSelection provides a description of a markets key line selection, comprising the selectionId and handicap of the team it is applied to.
 type KeyLineSelection struct {
 	SelectionID int     `json:"selectionId"`
 	Handicap    float32 `json:"handicap"`
 }
 
+// KeyLineDescription provides a description of a markets key line for valid market types
 type KeyLineDescription struct {
 	KeyLine []KeyLineSelection `json:"keyLine"`
 }
@@ -244,7 +246,7 @@ type Match struct {
 	MatchDate time.Time `json:"matchDate"`
 }
 
-// MarketCatalogue holds information about a market.
+// MarketCatalogue holds the static data in a market.
 type MarketCatalogue struct {
 	MarketID                   string                     `json:"marketId"`
 	MarketName                 string                     `json:"marketName"`
@@ -279,6 +281,7 @@ type MarketBook struct {
 	KeyLineDescription    KeyLineDescription `json:"keyLineDescription"`
 }
 
+// RunnerProfitAndLoss contains potential changes in winnings in the event of a particular selection winning, losing or placing.
 type RunnerProfitAndLoss struct {
 	SelectionID int     `json:"selectionId"`
 	IfWin       float32 `json:"ifWin"`
@@ -286,6 +289,7 @@ type RunnerProfitAndLoss struct {
 	IfPlace     float32 `json:"ifPlace"`
 }
 
+// MarketProfitAndLoss contains changes in winnings depending on the performance of selections associated with a given market.
 type MarketProfitAndLoss struct {
 	MarketID          string                `json:"marketId"`
 	CommissionApplied float32               `json:"commissionApplied"`
@@ -297,6 +301,7 @@ type TimeRangeFilter struct {
 	To   string `json:"to,omitempty"`
 }
 
+// MarketFilter is the filter to select desired markets. All markets that match the criteria in the filter are selected.
 type MarketFilter struct {
 	TextQuery          string          `json:"textQuery,omitempty"`
 	EventTypeIds       []string        `json:"eventTypeIds,omitempty"`

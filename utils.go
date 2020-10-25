@@ -15,8 +15,8 @@ func createURL(endpoint string, method string) string {
 
 type Detail struct{}
 
+// ErrorResponse contains error information from an unsuccessful HTTP POST request.
 type ErrorResponse struct {
-	//b'{"faultcode":"Client","faultstring":"DSC-0018","detail":{}}'
 	FaultCode   string  `json:"faultcode"`
 	FaultString string  `json:"faultstring"`
 	Detail      *Detail `json:"detail"`
@@ -31,6 +31,7 @@ func logError(data []byte) error {
 	return nil
 }
 
+// Request issues a HTTP POST to the Betfair Exchange API Endpoint specified.
 func (b *Betting) Request(url string, params interface{}, v interface{}) error {
 
 	bytes, err := json.Marshal(params)
@@ -67,7 +68,7 @@ func (b *Betting) Request(url string, params interface{}, v interface{}) error {
 		return err
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		logError(data)
 		return errors.New(resp.Status)
 	}

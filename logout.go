@@ -15,6 +15,7 @@ type logoutResult struct {
 	Error   string `json:"error"`
 }
 
+// Logout from the current session.
 func (c *Client) Logout() (logoutResult, error) {
 	// build url
 	url := createURL(Endpoints.Identity, "logout")

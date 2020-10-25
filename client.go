@@ -16,13 +16,12 @@ type Config struct {
 	Locale   string
 }
 
-// holds session data
 type session struct {
 	SessionToken string
 	LoginTime    time.Time
 }
 
-// Client main client object
+// Client object
 type Client struct {
 	config       *Config
 	session      *session
@@ -39,22 +38,26 @@ type Betting struct {
 }
 
 // Account object
-type Account struct{}
+type Account struct {
+	Client *Client
+}
 
 // Streaming object
-type Streaming struct{}
+type Streaming struct {
+	Client *Client
+}
 
 // Historical object
 type Historical struct {
 	Client *Client
 }
 
-// NewClient creates a new Betfiar client.
+// NewClient creates a new Betfair client.
 func NewClient(config *Config) (*Client, error) {
-	c := new(Client)
 
-	// create session
+	c := new(Client)
 	c.session = new(session)
+
 	var cert tls.Certificate
 	var err error
 	// create certificates
@@ -77,15 +80,19 @@ func NewClient(config *Config) (*Client, error) {
 
 	// create betting
 	c.Betting = new(Betting)
+	c.Betting.Client = c
 
 	// create account
 	c.Account = new(Account)
+	c.Account.Client = c
 
 	// create streaming
 	c.Streaming = new(Streaming)
+	c.Streaming.Client = c
 
 	// create historical
 	c.Historical = new(Historical)
+	c.Historical.Client = c
 
 	return c, nil
 }

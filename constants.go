@@ -7,10 +7,12 @@ type marketStatus string
 type persistenceType string
 type orderType string
 type orderStatus string
-type side string
 type executionReportStatus string
 type instructionReportStatus string
 type executionReportErrorCode string
+
+// BackOrLay is the type associated with strings contained in the Side struct.
+type BackOrLay string
 
 // WeightConstant should be the type specified for const values relating to request limit calculations
 // https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Market+Data+Request+Limits
@@ -85,7 +87,7 @@ var OrderStatus = struct {
 
 // Side indicates if the bet is a Back or a Lay.
 var Side = struct {
-	Back, Lay side
+	Back, Lay BackOrLay
 }{
 	Back: "BACK",
 	Lay:  "LAY",

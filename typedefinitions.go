@@ -180,7 +180,7 @@ type PlaceInstruction struct {
 	OrderType          orderType           `json:"orderType,omitempty"`
 	SelectionID        int                 `json:"selectionId,omitempty"`
 	Handicap           float32             `json:"handicap"`
-	Side               side                `json:"side,omitempty"`
+	Side               BackOrLay           `json:"side,omitempty"`
 	LimitOrder         LimitOrder          `json:"limitOrder,omitempty"`
 	LimitOnCloseOrder  *LimitOnCloseOrder  `json:"limitOnCloseOrder,omitempty"`
 	MarketOnCloseOrder *MarketOnCloseOrder `json:"marketOnCloseOrder,omitempty"`
@@ -240,7 +240,7 @@ type KeyLineDescription struct {
 type Match struct {
 	BetID     string    `json:"betId"`
 	MatchID   string    `json:"matchId"`
-	Side      side      `json:"side"`
+	Side      BackOrLay `json:"side"`
 	Price     float32   `json:"price"`
 	Size      float32   `json:"size"`
 	MatchDate time.Time `json:"matchDate"`

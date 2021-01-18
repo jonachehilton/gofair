@@ -19,6 +19,7 @@ func (b *Betting) ListEventTypes(filter MarketFilter) ([]EventTypeResult, error)
 	if err != nil {
 		return nil, err
 	}
+	
 	return response, err
 }
 

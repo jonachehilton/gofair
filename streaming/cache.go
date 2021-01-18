@@ -8,19 +8,19 @@ import (
 func CreateMarketCache(changeMessage MarketChangeMessage, marketChange MarketChange) *MarketCache {
 	cache := &MarketCache{
 		&changeMessage.PublishTime,
-		marketChange.MarketId,
+		marketChange.MarketID,
 		&marketChange.TradedVolume,
 		marketChange.MarketDefinition,
 		make(map[int64]RunnerCache),
 	}
 	for _, runnerChange := range marketChange.RunnerChange {
-		cache.Runners[runnerChange.SelectionId] = *CreateRunnerCache(runnerChange)
+		cache.Runners[runnerChange.SelectionID] = *CreateRunnerCache(runnerChange)
 	}
 	return cache
 }
 
 func CreateRunnerCache(change RunnerChange) *RunnerCache {
-	log.Println("Creating new runner cache", change.SelectionId)
+	log.Println("Creating new runner cache", change.SelectionID)
 
 	// create traded data structure
 	var traded Available
@@ -113,7 +113,7 @@ func CreateRunnerCache(change RunnerChange) *RunnerCache {
 	bestDisplayAvailableToLay.Reverse = false
 
 	cache := &RunnerCache{
-		change.SelectionId,
+		change.SelectionID,
 		&change.LastTradedPrice,
 		&change.TradedVolume,
 		&traded,
@@ -349,10 +349,10 @@ func (cache *MarketCache) UpdateCache(changeMessage MarketChangeMessage, marketC
 	}
 	if marketChange.RunnerChange != nil {
 		for _, runnerChange := range marketChange.RunnerChange {
-			if runnerCache, ok := cache.Runners[runnerChange.SelectionId]; ok {
+			if runnerCache, ok := cache.Runners[runnerChange.SelectionID]; ok {
 				runnerCache.UpdateCache(runnerChange)
 			} else {
-				cache.Runners[runnerChange.SelectionId] = *CreateRunnerCache(runnerChange)
+				cache.Runners[runnerChange.SelectionID] = *CreateRunnerCache(runnerChange)
 			}
 		}
 	}
@@ -360,7 +360,7 @@ func (cache *MarketCache) UpdateCache(changeMessage MarketChangeMessage, marketC
 
 func (cache *MarketCache) GetRunnerDefinition(selectionId int64) RunnerDefinition {
 	for i := range cache.MarketDefinition.Runners {
-		if cache.MarketDefinition.Runners[i].SelectionId == selectionId {
+		if cache.MarketDefinition.Runners[i].SelectionID == selectionId {
 			return cache.MarketDefinition.Runners[i]
 		}
 	}

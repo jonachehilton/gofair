@@ -5,7 +5,7 @@ import "time"
 type RunnerDefinition struct {
 	SortPriority     int32     `json:"sortPriority"`
 	RemovalDate      time.Time `json:"removalDate"`
-	SelectionId      int64     `json:"id"`
+	SelectionID      int64     `json:"id"`
 	Handicap         float64   `json:"hc"`
 	AdjustmentFactor float64   `json:"adjustmentFactor"`
 	Bsp              float64   `json:"bsp"`
@@ -29,7 +29,7 @@ type MarketDefinition struct {
 	BettingType            string             `json:"bettingType"`
 	NumberOfActiveRunners  int32              `json:"numberOfActiveRunners"`
 	LineMinUnit            float64            `json:"lineMinUnit"`
-	EventId                string             `json:"eventId"`
+	EventID                string             `json:"eventId"`
 	CrossMatching          bool               `json:"crossMatching"`
 	RunnersVoidable        bool               `json:"runnersVoidable"`
 	TurnInPlayEnabled      bool               `json:"turnInPlayEnabled"`
@@ -38,7 +38,7 @@ type MarketDefinition struct {
 	PersistenceEnabled     bool               `json:"persistenceEnabled"`
 	Runners                []RunnerDefinition `json:"runners"`
 	Version                int64              `json:"version"`
-	EventTypeId            string             `json:"eventTypeId"`
+	EventTypeID            string             `json:"eventTypeId"`
 	Complete               bool               `json:"complete"`
 	OpenDate               string             `json:"openDate"`
 	MarketTime             string             `json:"marketTime"`
@@ -51,7 +51,7 @@ type MarketDefinition struct {
 }
 
 type RunnerChange struct {
-	SelectionId     int64       `json:"id"`
+	SelectionID     int64       `json:"id"`
 	Handicap        float64     `json:"hc"`
 	TradedVolume    float64     `json:"tv"`
 	LastTradedPrice float64     `json:"ltp"`
@@ -71,7 +71,7 @@ type RunnerChange struct {
 type MarketChange struct {
 	Image            bool              `json:"img"`
 	Conflated        bool              `json:"con"`
-	MarketId         string            `json:"id"`
+	MarketID         string            `json:"id"`
 	TradedVolume     float64           `json:"tv"`
 	RunnerChange     []RunnerChange    `json:"rc"`
 	MarketDefinition *MarketDefinition `json:"marketDefinition"`

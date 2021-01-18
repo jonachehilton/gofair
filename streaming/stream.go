@@ -33,15 +33,15 @@ func (ms *MarketStream) OnUpdate(changeMessage MarketChangeMessage) {
 
 	for _, marketChange := range changeMessage.MarketChanges {
 
-		if marketCache, ok := ms.Cache[marketChange.MarketId]; ok {
+		if marketCache, ok := ms.Cache[marketChange.MarketID]; ok {
 			marketCache.UpdateCache(changeMessage, marketChange)
 			ms.OutputChannel <- marketCache.Snap()
 		} else {
 			marketCache := CreateMarketCache(changeMessage, marketChange)
-			ms.Cache[marketChange.MarketId] = *marketCache
+			ms.Cache[marketChange.MarketID] = *marketCache
 			ms.OutputChannel <- marketCache.Snap()
 
-			log.Println("Created new market cache", marketChange.MarketId)
+			log.Println("Created new market cache", marketChange.MarketID)
 		}
 	}
 }

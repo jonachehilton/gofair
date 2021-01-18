@@ -16,6 +16,10 @@ func ListenerFactory(client *gofair.Client) *Listener {
 	l.SubscribeChannel = make(chan MarketSubscriptionRequest, 64)
 	l.addMarketStream()
 	l.addOrderStream()
+
+	l.connect()
+	l.authenticate()
+	
 	return l
 }
 

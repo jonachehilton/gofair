@@ -45,7 +45,7 @@ func loginRequest(c *Client, url string, body *strings.Reader) ([]byte, error) {
 
 	// HTTP client
 	ssl := &tls.Config{
-		Certificates:       []tls.Certificate{*c.certificates},
+		Certificates:       []tls.Certificate{*c.Certificates},
 		InsecureSkipVerify: true,
 	}
 

@@ -25,7 +25,7 @@ type Session struct {
 type Client struct {
 	Config       *Config
 	Session      *Session
-	certificates *tls.Certificate
+	Certificates *tls.Certificate
 	Betting      *Betting
 	Account      *Account
 	Streaming    *Streaming
@@ -73,7 +73,7 @@ func NewClient(config *Config) (*Client, error) {
 			return nil, err
 		}
 	}
-	c.certificates = &cert
+	c.Certificates = &cert
 
 	// set config
 	c.Config = config

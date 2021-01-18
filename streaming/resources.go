@@ -1,6 +1,10 @@
 package streaming
 
-import "time"
+import (
+	"time"
+
+	"github.com/belmegatron/gofair"
+)
 
 type RunnerDefinition struct {
 	SortPriority     int32     `json:"sortPriority"`
@@ -123,4 +127,18 @@ type ExchangePrices struct {
 	AvailableToBack []PriceSize
 	AvailableToLay  []PriceSize
 	TradedVolume    []PriceSize
+}
+
+type AuthRequest struct {
+	OP           string `json:"op"`
+	ID           int64  `json:"id"`
+	AppKey       string `json:"appKey"`
+	SessionToken string `json:"session"`
+}
+
+type MarketSubscriptionRequest struct {
+	OP               string                  `json:"op"`
+	ID               int64                   `json:"id"`
+	MarketFilter     gofair.MarketFilter     `json:"marketFilter"`
+	MarketDataFilter gofair.MarketDataFilter `json:"marketDataFilter"`
 }

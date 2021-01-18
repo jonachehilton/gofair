@@ -4,61 +4,43 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
-	"log"
-)
+	"time"
 
-const (
-	STREAM             = "stream-api.betfair.com:443"
-	STREAM_INTEGRATION = "stream-api-integration.betfair.com:443"
+	"github.com/belmegatron/gofair"
 )
 
 // ListenerFactory creates a Listener struct
-func ListenerFactory(AppKey string, SessionToken string, CertPath string, KeyPath string) *Listener {
+func ListenerFactory(client *gofair.Client) *Listener {
 	l := new(Listener)
-	l.AppKey = AppKey
-	l.SessionToken = SessionToken
-	l.CertPath = CertPath
-	l.KeyPath = KeyPath
+	l.Client = client
+	l.SubscribeChannel = make(chan MarketSubscriptionRequest, 64)
+	l.addMarketStream()
+	l.addOrderStream()
 	return l
 }
 
-type AuthMessage struct {
-	OP           string `json:"op"`
-	ID           int64  `json:"id"`
-	AppKey       string `json:"appKey"`
-	SessionToken string `json:"session"`
-}
-
 type Listener struct {
-	UniqueID      int64
-	Conn          *tls.Conn
-	AppKey        string
-	SessionToken  string
-	CertPath      string
-	KeyPath       string
-	MarketStream  *MarketStream
-	OrderStream   Stream
-	OutputChannel chan MarketBook //todo change to interface so that OrderBook can be accepted
+	UniqueID         int64
+	Conn             *tls.Conn
+	Client           *gofair.Client
+	MarketStream     *MarketStream
+	OrderStream      Stream
+	SubscribeChannel chan MarketSubscriptionRequest
+	OutputChannel    chan MarketBook // TODO: change to interface so that OrderBook can be accepted
 }
 
-func (l *Listener) AddMarketStream() {
+func (l *Listener) addMarketStream() {
 	l.MarketStream = new(MarketStream)
 	l.MarketStream.OutputChannel = l.OutputChannel
 	l.MarketStream.Cache = make(map[string]MarketCache)
 }
 
-func (l *Listener) AddOrderStream() {}
+func (l *Listener) addOrderStream() {}
 
-func (l *Listener) Connect() error {
+func (l *Listener) connect() error {
 
-	cert, err := tls.LoadX509KeyPair(l.CertPath, l.KeyPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	cfg := &tls.Config{Certificates: []tls.Certificate{cert}}
-	conn, err := tls.Dial("tcp", STREAM_INTEGRATION, cfg)
+	cfg := &tls.Config{Certificates: []tls.Certificate{*l.Client.Certificates}}
+	conn, err := tls.Dial("tcp", gofair.Endpoints.StreamIntegration, cfg)
 	if err != nil {
 		return err
 	}
@@ -68,18 +50,23 @@ func (l *Listener) Connect() error {
 	return nil
 }
 
-type NoConnectionError struct{}
+func (l *Listener) Subscribe(marketFilter *gofair.MarketFilter) {
 
-func (err *NoConnectionError) Error() string {
-	return fmt.Sprintf("No stream connection exists.")
+	request := new(MarketSubscriptionRequest)
+	request.OP = "marketSubscription"
+	request.ID = l.UniqueID
+	l.UniqueID++
+	request.MarketFilter = *marketFilter
+	request.MarketDataFilter.Fields = []string{"EX_BEST_OFFERS"}
+	l.SubscribeChannel <- *request
 }
 
-func (l *Listener) auth() error {
-	msg := new(AuthMessage)
+func (l *Listener) authenticate() error {
+	msg := new(AuthRequest)
 	msg.OP = "authentication"
 	msg.ID = l.UniqueID
-	msg.AppKey = l.AppKey
-	msg.SessionToken = l.SessionToken
+	msg.AppKey = l.Client.Config.AppKey
+	msg.SessionToken = l.Client.Session.SessionToken
 
 	if l.Conn == nil {
 		err := new(NoConnectionError)
@@ -95,35 +82,80 @@ func (l *Listener) auth() error {
 	return nil
 }
 
-func (l *Listener) ReadLoop() error {
+func (l *Listener) readPump(errChan *chan error) {
 
 	if l.Conn == nil {
 		err := new(NoConnectionError)
-		return err
+		*errChan <- err
+		return
 	}
 
 	for {
+
 		var res []byte
 		cb, err := l.Conn.Read(res)
 		if err != nil {
-			log.Fatal(err)
+			*errChan <- err
+			return
 		}
 
 		if cb > 0 {
-			fmt.Println(string(res))
 			msg := new(MarketChangeMessage)
 			err = json.Unmarshal(res, msg)
+
 			if err != nil {
-				log.Fatal(err)
+				*errChan <- err
+				return
 			}
 
-			l.OnData(*msg)
+			l.onData(*msg)
 		}
 	}
 
 }
 
-func (l *Listener) OnData(ChangeMessage MarketChangeMessage) {
+const (
+	// Time allowed to write a message to the peer.
+	writeWait = 10 * time.Second
+
+	// Time allowed to read the next pong message from the peer.
+	pongWait = 60 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = (pongWait * 9) / 10
+
+	// Maximum message size allowed from peer.
+	maxMessageSize = 1024
+)
+
+func (l *Listener) writePump(errChan *chan error) {
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		l.Conn.Close()
+	}()
+	for {
+		select {
+		case sub := <-l.SubscribeChannel:
+			request := new(bytes.Buffer)
+			json.NewEncoder(request).Encode(sub)
+			b := request.Bytes()
+			_, err := l.Conn.Write(b)
+			if err != nil {
+				*errChan <- err
+				return
+			}
+		case <-ticker.C:
+			_, err := l.Conn.Write([]byte{})
+			if err != nil {
+				*errChan <- err
+				return
+			}
+		}
+	}
+}
+
+func (l *Listener) onData(ChangeMessage MarketChangeMessage) {
 	//todo check unique id
 	//todo error handler
 

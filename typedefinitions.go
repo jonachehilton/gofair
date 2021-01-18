@@ -317,3 +317,8 @@ type MarketFilter struct {
 	MarketStartTime    TimeRangeFilter `json:"marketStartTime,omitempty"`
 	WithOrders         string          `json:"withOrders,omitempty"`
 }
+
+type MarketDataFilter struct {
+	Fields       []string `json:"fields"`
+	LadderLevels int64    `json:"ladderLevels"`
+}

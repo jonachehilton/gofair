@@ -50,7 +50,7 @@ func (l *Listener) AddMarketStream() {
 
 func (l *Listener) AddOrderStream() {}
 
-func (l *Listener) connect() error {
+func (l *Listener) Connect() error {
 
 	cert, err := tls.LoadX509KeyPair(l.CertPath, l.KeyPath)
 	if err != nil {
@@ -95,7 +95,7 @@ func (l *Listener) auth() error {
 	return nil
 }
 
-func (l *Listener) readLoop() error {
+func (l *Listener) ReadLoop() error {
 
 	if l.Conn == nil {
 		err := new(NoConnectionError)

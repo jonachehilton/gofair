@@ -48,8 +48,8 @@ func (b *Betting) Request(url string, params interface{}, v interface{}) error {
 	}
 
 	// set headers
-	req.Header.Set("X-Application", b.Client.config.AppKey)
-	req.Header.Set("X-Authentication", b.Client.session.SessionToken)
+	req.Header.Set("X-Application", b.Client.Config.AppKey)
+	req.Header.Set("X-Authentication", b.Client.Session.SessionToken)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Connection", "keep-alive")

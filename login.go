@@ -17,7 +17,7 @@ type loginResult struct {
 
 func (c *Client) Login() (loginResult, error) {
 	// build body
-	body := strings.NewReader("username=" + c.config.Username + "&password=" + c.config.Password)
+	body := strings.NewReader("username=" + c.Config.Username + "&password=" + c.Config.Password)
 
 	// build url
 	url := createURL(Endpoints.Login, "certlogin")
@@ -36,8 +36,8 @@ func (c *Client) Login() (loginResult, error) {
 		return result, err
 	}
 
-	c.session.SessionToken = result.SessionToken
-	c.session.LoginTime = time.Now().UTC()
+	c.Session.SessionToken = result.SessionToken
+	c.Session.LoginTime = time.Now().UTC()
 	return result, nil
 }
 

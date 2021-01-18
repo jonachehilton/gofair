@@ -34,8 +34,8 @@ func (c *Client) Logout() (logoutResult, error) {
 		return result, err
 	}
 
-	c.session.SessionToken = ""
-	c.session.LoginTime = time.Time{}
+	c.Session.SessionToken = ""
+	c.Session.LoginTime = time.Time{}
 	return result, nil
 }
 
@@ -48,8 +48,8 @@ func logoutRequest(c *Client, url string) ([]byte, error) {
 
 	// set headers
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("X-Application", c.config.AppKey)
-	req.Header.Set("X-Authentication", c.session.SessionToken)
+	req.Header.Set("X-Application", c.Config.AppKey)
+	req.Header.Set("X-Authentication", c.Session.SessionToken)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{}

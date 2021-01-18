@@ -30,7 +30,7 @@ func (c *Client) KeepAlive() (keepAliveResult, error) {
 		return result, err
 	}
 
-	c.session.SessionToken = result.Token
-	c.session.LoginTime = time.Now().UTC()
+	c.Session.SessionToken = result.Token
+	c.Session.LoginTime = time.Now().UTC()
 	return result, nil
 }

@@ -12,7 +12,7 @@ type EventTypeResult struct {
 	EventType   eventType `json:"eventType"`
 }
 
-type competition struct {
+type Competition struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
@@ -20,7 +20,7 @@ type competition struct {
 type CompetitionResult struct {
 	MarketCount       int         `json:"marketCount"`
 	CompetitionRegion string      `json:"competitionRegion"`
-	Competition       competition `json:"competition"`
+	Competition       Competition `json:"competition"`
 }
 
 type timeRange struct {
@@ -33,7 +33,7 @@ type TimeRangeResult struct {
 	TimeRange   timeRange `json:"timeRange"`
 }
 
-type event struct {
+type Event struct {
 	ID          string `json:"id"`
 	OpenDate    string `json:"openDate"`
 	TimeZone    string `json:"timezone"`
@@ -44,7 +44,7 @@ type event struct {
 
 type EventResult struct {
 	MarketCount int   `json:"marketCount"`
-	Event       event `json:"event"`
+	Event       Event `json:"event"`
 }
 
 type MarketTypeResult struct {
@@ -252,8 +252,8 @@ type MarketCatalogue struct {
 	MarketName                 string                     `json:"marketName"`
 	TotalMatched               float32                    `json:"totalMatched"`
 	MarketStartTime            time.Time                  `json:"marketStartTime"`
-	Competition                competition                `json:"competition"`
-	Event                      event                      `json:"event"`
+	Competition                Competition                `json:"competition"`
+	Event                      Event                      `json:"event"`
 	EventType                  eventType                  `json:"eventType"`
 	MarketCatalogueDescription marketCatalogueDescription `json:"description"`
 	Runners                    []runnerCatalogue          `json:"runners"`

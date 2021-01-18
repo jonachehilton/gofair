@@ -16,15 +16,15 @@ type Config struct {
 	Locale   string
 }
 
-type session struct {
+type Session struct {
 	SessionToken string
 	LoginTime    time.Time
 }
 
 // Client object
 type Client struct {
-	config       *Config
-	session      *session
+	Config       *Config
+	Session      *Session
 	certificates *tls.Certificate
 	Betting      *Betting
 	Account      *Account
@@ -56,7 +56,7 @@ type Historical struct {
 func NewClient(config *Config) (*Client, error) {
 
 	c := new(Client)
-	c.session = new(session)
+	c.Session = new(Session)
 
 	var cert tls.Certificate
 	var err error
@@ -76,7 +76,7 @@ func NewClient(config *Config) (*Client, error) {
 	c.certificates = &cert
 
 	// set config
-	c.config = config
+	c.Config = config
 
 	// create betting
 	c.Betting = new(Betting)
@@ -99,10 +99,10 @@ func NewClient(config *Config) (*Client, error) {
 
 // SessionExpired returns True if client not logged in or expired, betfair requires keep alive every 4hrs (20mins ITA)
 func (c *Client) SessionExpired() bool {
-	if c.session.SessionToken == "" {
+	if c.Session.SessionToken == "" {
 		return true
 	}
-	duration := time.Since(c.session.LoginTime)
+	duration := time.Since(c.Session.LoginTime)
 	if duration.Minutes() > 200 {
 		return true
 	}

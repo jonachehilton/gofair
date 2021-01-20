@@ -14,13 +14,41 @@ func ListenerFactory(client *gofair.Client) *Listener {
 	l := new(Listener)
 	l.Client = client
 	l.SubscribeChannel = make(chan MarketSubscriptionRequest, 64)
+	l.KillChannel = make(chan int, 64)
 	l.addMarketStream()
 	l.addOrderStream()
 
-	l.connect()
-	l.authenticate()
-	
 	return l
+}
+
+func (l *Listener) Start(errChan *chan error) error {
+
+	err := l.connect()
+
+	if err != nil {
+		return err
+	}
+
+	go l.readPump(errChan)
+	go l.writePump(errChan)
+
+	err = l.authenticate()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (l *Listener) Stop() error {
+	l.KillChannel <- 1
+	err := l.Conn.Close()
+	if err != nil {
+		return err
+	}
+	return nil
+
 }
 
 type Listener struct {
@@ -31,6 +59,7 @@ type Listener struct {
 	OrderStream      Stream
 	SubscribeChannel chan MarketSubscriptionRequest
 	OutputChannel    chan MarketBook // TODO: change to interface so that OrderBook can be accepted
+	KillChannel      chan int
 }
 
 func (l *Listener) addMarketStream() {
@@ -95,27 +124,29 @@ func (l *Listener) readPump(errChan *chan error) {
 	}
 
 	for {
-
-		var res []byte
-		cb, err := l.Conn.Read(res)
-		if err != nil {
-			*errChan <- err
+		select {
+		case <-l.KillChannel:
 			return
-		}
-
-		if cb > 0 {
-			msg := new(MarketChangeMessage)
-			err = json.Unmarshal(res, msg)
-
+		default:
+			var res []byte
+			cb, err := l.Conn.Read(res)
 			if err != nil {
 				*errChan <- err
 				return
 			}
+			if cb > 0 {
+				msg := new(MarketChangeMessage)
+				err = json.Unmarshal(res, msg)
 
-			l.onData(*msg)
+				if err != nil {
+					*errChan <- err
+					return
+				}
+
+				l.onData(*msg)
+			}
 		}
 	}
-
 }
 
 const (
@@ -140,6 +171,8 @@ func (l *Listener) writePump(errChan *chan error) {
 	}()
 	for {
 		select {
+		case <-l.KillChannel:
+			return
 		case sub := <-l.SubscribeChannel:
 			request := new(bytes.Buffer)
 			json.NewEncoder(request).Encode(sub)

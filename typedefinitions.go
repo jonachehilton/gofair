@@ -303,19 +303,19 @@ type TimeRangeFilter struct {
 
 // MarketFilter is the filter to select desired markets. All markets that match the criteria in the filter are selected.
 type MarketFilter struct {
-	TextQuery          string          `json:"textQuery,omitempty"`
-	EventTypeIds       []string        `json:"eventTypeIds,omitempty"`
-	MarketCountries    []string        `json:"marketCountries,omitempty"`
-	MarketIds          []string        `json:"marketIds,omitempty"`
-	EventIds           []string        `json:"eventIds,omitempty"`
-	CompetitionIds     []string        `json:"competitionIds,omitempty"`
-	BSPOnly            bool            `json:"bspOnly,omitempty"`
-	TurnInPlayEnabled  bool            `json:"turnInPLayEnabled,omitempty"`
-	InPlayOnly         bool            `json:"inPlayOnly,omitempty"`
-	MarketBettingTypes []string        `json:"marketBettingTypes,omitempty"`
-	MarketTypeCOdes    []string        `json:"marketTypeCOdes,omitempty"`
-	MarketStartTime    TimeRangeFilter `json:"marketStartTime,omitempty"`
-	WithOrders         string          `json:"withOrders,omitempty"`
+	TextQuery          string           `json:"textQuery,omitempty"`
+	EventTypeIds       []string         `json:"eventTypeIds,omitempty"`
+	MarketCountries    []string         `json:"marketCountries,omitempty"`
+	MarketIds          []string         `json:"marketIds,omitempty"`
+	EventIds           []string         `json:"eventIds,omitempty"`
+	CompetitionIds     []string         `json:"competitionIds,omitempty"`
+	BSPOnly            bool             `json:"bspOnly,omitempty"`
+	TurnInPlayEnabled  bool             `json:"turnInPLayEnabled,omitempty"`
+	InPlayOnly         bool             `json:"inPlayOnly,omitempty"`
+	MarketBettingTypes []string         `json:"marketBettingTypes,omitempty"`
+	MarketTypeCodes    []string         `json:"marketTypeCodes,omitempty"`
+	MarketStartTime    *TimeRangeFilter `json:"marketStartTime,omitempty"`
+	WithOrders         string           `json:"withOrders,omitempty"`
 }
 
 type MarketDataFilter struct {

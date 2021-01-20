@@ -136,6 +136,11 @@ type AuthRequest struct {
 	SessionToken string `json:"session"`
 }
 
+type AuthResponse struct {
+	OP           string `json:"op"`
+	ConnectionID string `json:"connectionId"`
+}
+
 type MarketSubscriptionRequest struct {
 	OP               string                  `json:"op"`
 	ID               int64                   `json:"id"`

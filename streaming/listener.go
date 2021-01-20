@@ -29,14 +29,14 @@ func (l *Listener) Start(errChan *chan error) error {
 		return err
 	}
 
-	go l.readPump(errChan)
-	go l.writePump(errChan)
-
 	err = l.authenticate()
 
 	if err != nil {
 		return err
 	}
+
+	go l.readPump(errChan)
+	go l.writePump(errChan)
 
 	return nil
 }
@@ -91,7 +91,10 @@ func (l *Listener) Subscribe(marketFilter *gofair.MarketFilter) {
 	l.UniqueID++
 	request.MarketFilter = *marketFilter
 	request.MarketDataFilter.Fields = []string{"EX_BEST_OFFERS"}
+	request.MarketDataFilter.LadderLevels = 1
+
 	l.SubscribeChannel <- *request
+
 }
 
 func (l *Listener) authenticate() error {
@@ -106,11 +109,20 @@ func (l *Listener) authenticate() error {
 		return err
 	}
 
-	request := new(bytes.Buffer)
-	json.NewEncoder(request).Encode(msg)
+	buf := bytes.NewBuffer(nil)
+	json.NewEncoder(buf).Encode(msg)
 
-	b := request.Bytes()
+	b := buf.Bytes()
 	l.Conn.Write(b)
+
+	resp := new(AuthResponse)
+	d := json.NewDecoder(l.Conn)
+
+	err := d.Decode(resp)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -123,28 +135,22 @@ func (l *Listener) readPump(errChan *chan error) {
 		return
 	}
 
+	d := json.NewDecoder(l.Conn)
+
 	for {
 		select {
 		case <-l.KillChannel:
 			return
 		default:
-			var res []byte
-			cb, err := l.Conn.Read(res)
+			resp := new(MarketChangeMessage)
+			err := d.Decode(resp)
+
 			if err != nil {
 				*errChan <- err
 				return
 			}
-			if cb > 0 {
-				msg := new(MarketChangeMessage)
-				err = json.Unmarshal(res, msg)
-
-				if err != nil {
-					*errChan <- err
-					return
-				}
-
-				l.onData(*msg)
-			}
+				
+			l.onData(*resp)
 		}
 	}
 }
@@ -170,13 +176,14 @@ func (l *Listener) writePump(errChan *chan error) {
 		l.Conn.Close()
 	}()
 	for {
+		buf := bytes.NewBuffer(nil)
+
 		select {
 		case <-l.KillChannel:
 			return
 		case sub := <-l.SubscribeChannel:
-			request := new(bytes.Buffer)
-			json.NewEncoder(request).Encode(sub)
-			b := request.Bytes()
+			json.NewEncoder(buf).Encode(sub)
+			b := buf.Bytes()
 			_, err := l.Conn.Write(b)
 			if err != nil {
 				*errChan <- err
@@ -193,8 +200,6 @@ func (l *Listener) writePump(errChan *chan error) {
 }
 
 func (l *Listener) onData(ChangeMessage MarketChangeMessage) {
-	//todo check unique id
-	//todo error handler
 
 	switch ChangeMessage.Operation {
 	case "connection":

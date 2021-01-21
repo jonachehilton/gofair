@@ -83,15 +83,14 @@ func (l *Listener) connect() error {
 	return nil
 }
 
-func (l *Listener) Subscribe(marketFilter *gofair.MarketFilter) {
+func (l *Listener) Subscribe(marketFilter *gofair.MarketFilter, marketDataFilter *gofair.MarketDataFilter) {
 
 	request := new(MarketSubscriptionRequest)
 	request.OP = "marketSubscription"
 	request.ID = l.UniqueID
 	l.UniqueID++
 	request.MarketFilter = *marketFilter
-	request.MarketDataFilter.Fields = []string{"EX_BEST_OFFERS"}
-	request.MarketDataFilter.LadderLevels = 1
+	request.MarketDataFilter = *marketDataFilter
 
 	l.SubscribeChannel <- *request
 

@@ -16,6 +16,8 @@ type Stream interface {
 type MarketStream struct {
 	OutputChannel chan MarketBook
 	Cache         map[string]MarketCache
+	InitialClk    string
+	Clk           string
 }
 
 func getMarketIDs(mcm models.MarketChangeMessage) []string {
@@ -45,7 +47,12 @@ func (ms *MarketStream) OnHeartbeat(changeMessage models.MarketChangeMessage) {
 }
 
 func (ms *MarketStream) OnUpdate(changeMessage models.MarketChangeMessage) {
-	// todo update clk/initialClk
+	
+	if ms.InitialClk == "" {
+		ms.InitialClk = changeMessage.Clk
+	}
+	
+	ms.Clk = changeMessage.Clk
 
 	for _, marketChange := range changeMessage.Mc {
 

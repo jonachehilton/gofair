@@ -13,9 +13,11 @@ import (
 // ListenerFactory creates a Listener struct
 func ListenerFactory(client *gofair.Client) *Listener {
 	l := new(Listener)
-	l.Client = client
-	l.SubscribeChannel = make(chan models.MarketSubscriptionMessage, 64)
-	l.KillChannel = make(chan int, 64)
+	l.client = client
+	l.subscribeChannel = make(chan models.MarketSubscriptionMessage, 64)
+	l.killChannel = make(chan int, 64)
+	l.ResultsChannel = make(chan MarketBook, 64)
+	l.ErrorChannel = make(chan error, 64)
 	l.addMarketStream()
 	l.addOrderStream()
 
@@ -45,8 +47,8 @@ func (l *Listener) Start(errChan *chan error) error {
 }
 
 func (l *Listener) Stop() error {
-	l.KillChannel <- 1
-	err := l.Conn.Close()
+	l.killChannel <- 1
+	err := l.conn.Close()
 	if err != nil {
 		return err
 	}
@@ -55,20 +57,28 @@ func (l *Listener) Stop() error {
 }
 
 type Listener struct {
-	UniqueID         int32
-	Conn             *tls.Conn
-	connectionID     string
-	Client           *gofair.Client
-	MarketStream     *MarketStream
-	OrderStream      Stream
-	SubscribeChannel chan models.MarketSubscriptionMessage
-	OutputChannel    chan MarketBook // TODO: change to interface so that OrderBook can be accepted
-	KillChannel      chan int
+
+	// Private
+	uniqueID     int32
+	connectionID string
+	conn         *tls.Conn
+	client       *gofair.Client
+
+	// Public
+	MarketStream *MarketStream
+	OrderStream  Stream
+
+	// Channels for IPC
+	subscribeChannel chan models.MarketSubscriptionMessage
+	killChannel      chan int
+	ErrorChannel     chan error
+	// TODO: change to interface so that OrderBook can be accepted
+	ResultsChannel   chan MarketBook 
 }
 
 func (l *Listener) addMarketStream() {
 	l.MarketStream = new(MarketStream)
-	l.MarketStream.OutputChannel = l.OutputChannel
+	l.MarketStream.OutputChannel = l.ResultsChannel
 	l.MarketStream.Cache = make(map[string]MarketCache)
 }
 
@@ -78,13 +88,14 @@ func (l *Listener) connect() (bool, error) {
 
 	var success bool = false
 
-	cfg := &tls.Config{Certificates: []tls.Certificate{*l.Client.Certificates}}
+	cfg := &tls.Config{Certificates: []tls.Certificate{*l.client.Certificates}}
 	conn, err := tls.Dial("tcp", gofair.Endpoints.StreamIntegration, cfg)
 
 	if err == nil {
 		connectionMessage := new(models.ConnectionMessage)
 		// TODO: Unlikely to exceed 4kB but probably need a nicer solution
-		buf := make([]byte, 4096)
+		const bufSize int = 4096
+		buf := make([]byte, bufSize)
 		cb, err := conn.Read(buf)
 		if cb > 0 && err == nil {
 			err = connectionMessage.UnmarshalJSON(buf)
@@ -92,7 +103,7 @@ func (l *Listener) connect() (bool, error) {
 				if connectionMessage.ConnectionID != "" {
 					success = true
 					l.connectionID = connectionMessage.ConnectionID
-					l.Conn = conn
+					l.conn = conn
 					log.Debug("BetfairStreamAPI - Connected")
 				}
 			}
@@ -106,33 +117,33 @@ func (l *Listener) Subscribe(marketFilter *models.MarketFilter, marketDataFilter
 
 	request := new(models.MarketSubscriptionMessage)
 	request.SetOp("marketSubscription")
-	request.SetID(l.UniqueID)
-	l.UniqueID++
+	request.SetID(l.uniqueID)
+	l.uniqueID++
 	request.MarketFilter = marketFilter
 	request.MarketDataFilter = marketDataFilter
 
-	l.SubscribeChannel <- *request
+	l.subscribeChannel <- *request
 }
 
 func (l *Listener) authenticate() error {
 
 	err := new(NoConnectionError)
 
-	if l.Conn != nil {
+	if l.conn != nil {
 
 		authenticationMessage := new(models.AuthenticationMessage)
 		authenticationMessage.SetOp("authentication")
-		authenticationMessage.SetID(l.UniqueID)
-		authenticationMessage.AppKey = l.Client.Config.AppKey
-		authenticationMessage.Session = l.Client.Session.SessionToken
+		authenticationMessage.SetID(l.uniqueID)
+		authenticationMessage.AppKey = l.client.Config.AppKey
+		authenticationMessage.Session = l.client.Session.SessionToken
 
 		b, err := authenticationMessage.MarshalJSON()
 		if err == nil {
-			_, err = l.Conn.Write(b)
+			_, err = l.conn.Write(b)
 			if err == nil {
 				// TODO: Unlikely to exceed 4kB but probably need a nicer solution
 				buf := make([]byte, 4096)
-				l.Conn.Read(buf)
+				l.conn.Read(buf)
 				statusMessage := new(models.StatusMessage)
 				statusMessage.UnmarshalJSON(buf)
 				if statusMessage.StatusCode == "FAILURE" {
@@ -157,7 +168,7 @@ func (l *Listener) authenticate() error {
 
 func (l *Listener) readPump(errChan *chan error) {
 
-	if l.Conn == nil {
+	if l.conn == nil {
 		err := new(NoConnectionError)
 		*errChan <- err
 		return
@@ -165,7 +176,7 @@ func (l *Listener) readPump(errChan *chan error) {
 
 	for {
 		select {
-		case <-l.KillChannel:
+		case <-l.killChannel:
 			return
 		default:
 			marketChangeMessage := new(models.MarketChangeMessage)
@@ -176,7 +187,7 @@ func (l *Listener) readPump(errChan *chan error) {
 
 			for {
 				tmp := make([]byte, chunkSize)
-				cb, err := l.Conn.Read(tmp)
+				cb, err := l.conn.Read(tmp)
 				if cb == 0 || err != nil {
 					break
 				}
@@ -213,23 +224,23 @@ func (l *Listener) writePump(errChan *chan error) {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		l.Conn.Close()
+		l.conn.Close()
 	}()
 	for {
 		select {
-		case <-l.KillChannel:
+		case <-l.killChannel:
 			return
-		case marketSubscriptionMessage := <-l.SubscribeChannel:
+		case marketSubscriptionMessage := <-l.subscribeChannel:
 			b, err := marketSubscriptionMessage.MarshalJSON()
 			if err == nil {
-				_, err = l.Conn.Write(b)
+				_, err = l.conn.Write(b)
 			}
 			if err != nil {
 				*errChan <- err
 				return
 			}
 		case <-ticker.C:
-			_, err := l.Conn.Write([]byte{})
+			_, err := l.conn.Write([]byte{})
 			if err != nil {
 				*errChan <- err
 				return

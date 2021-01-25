@@ -2,7 +2,6 @@ package streaming
 
 import (
 	"crypto/tls"
-	"io"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -178,7 +177,7 @@ func (l *Listener) readPump(errChan *chan error) {
 			for {
 				tmp := make([]byte, chunkSize)
 				cb, err := l.Conn.Read(tmp)
-				if cb == 0 || err != io.EOF {
+				if cb == 0 || err != nil {
 					break
 				}
 				buf = append(buf, tmp...)

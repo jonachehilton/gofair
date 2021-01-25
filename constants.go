@@ -219,6 +219,6 @@ var Endpoints = struct {
 	Betting:           "https://api.betfair.com/exchange/betting/rest/v1.0/",
 	Account:           "https://api.betfair.com/exchange/account/rest/v1.0/",
 	Navigation:        "https://api.betfair.com/exchange/betting/rest/v1/en/navigation/menu.json",
-	Stream:            "stream-api.betfair.com:443",
-	StreamIntegration: "stream-api-integration.betfair.com:443",
+	Stream:            "stream-api.betfair.com:443",             // Live
+	StreamIntegration: "stream-api-integration.betfair.com:443", // For Testing
 }

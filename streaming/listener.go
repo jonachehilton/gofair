@@ -1,19 +1,21 @@
 package streaming
 
 import (
-	"bytes"
 	"crypto/tls"
-	"encoding/json"
+	"io"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/belmegatron/gofair"
+	"github.com/belmegatron/gofair/streaming/models"
 )
 
 // ListenerFactory creates a Listener struct
 func ListenerFactory(client *gofair.Client) *Listener {
 	l := new(Listener)
 	l.Client = client
-	l.SubscribeChannel = make(chan MarketSubscriptionRequest, 64)
+	l.SubscribeChannel = make(chan models.MarketSubscriptionMessage, 64)
 	l.KillChannel = make(chan int, 64)
 	l.addMarketStream()
 	l.addOrderStream()
@@ -23,20 +25,22 @@ func ListenerFactory(client *gofair.Client) *Listener {
 
 func (l *Listener) Start(errChan *chan error) error {
 
-	err := l.connect()
+	success, err := l.connect()
 
 	if err != nil {
 		return err
 	}
 
-	err = l.authenticate()
+	if success {
+		err = l.authenticate()
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+
+		go l.readPump(errChan)
+		go l.writePump(errChan)
 	}
-
-	go l.readPump(errChan)
-	go l.writePump(errChan)
 
 	return nil
 }
@@ -52,12 +56,13 @@ func (l *Listener) Stop() error {
 }
 
 type Listener struct {
-	UniqueID         int64
+	UniqueID         int32
 	Conn             *tls.Conn
+	connectionID     string
 	Client           *gofair.Client
 	MarketStream     *MarketStream
 	OrderStream      Stream
-	SubscribeChannel chan MarketSubscriptionRequest
+	SubscribeChannel chan models.MarketSubscriptionMessage
 	OutputChannel    chan MarketBook // TODO: change to interface so that OrderBook can be accepted
 	KillChannel      chan int
 }
@@ -70,60 +75,85 @@ func (l *Listener) addMarketStream() {
 
 func (l *Listener) addOrderStream() {}
 
-func (l *Listener) connect() error {
+func (l *Listener) connect() (bool, error) {
+
+	var success bool = false
 
 	cfg := &tls.Config{Certificates: []tls.Certificate{*l.Client.Certificates}}
 	conn, err := tls.Dial("tcp", gofair.Endpoints.StreamIntegration, cfg)
-	if err != nil {
-		return err
+
+	if err == nil {
+		connectionMessage := new(models.ConnectionMessage)
+		// TODO: Unlikely to exceed 4kB but probably need a nicer solution
+		buf := make([]byte, 4096)
+		cb, err := conn.Read(buf)
+		if cb > 0 && err == nil {
+			err = connectionMessage.UnmarshalJSON(buf)
+			if err == nil {
+				if connectionMessage.ConnectionID != "" {
+					success = true
+					l.connectionID = connectionMessage.ConnectionID
+					l.Conn = conn
+					log.Debug("BetfairStreamAPI - Connected")
+				}
+			}
+		}
 	}
 
-	l.Conn = conn
-
-	return nil
+	return success, nil
 }
 
-func (l *Listener) Subscribe(marketFilter *gofair.MarketFilter, marketDataFilter *gofair.MarketDataFilter) {
+func (l *Listener) Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
 
-	request := new(MarketSubscriptionRequest)
-	request.OP = "marketSubscription"
-	request.ID = l.UniqueID
+	request := new(models.MarketSubscriptionMessage)
+	request.SetOp("marketSubscription")
+	request.SetID(l.UniqueID)
 	l.UniqueID++
-	request.MarketFilter = *marketFilter
-	request.MarketDataFilter = *marketDataFilter
+	request.MarketFilter = marketFilter
+	request.MarketDataFilter = marketDataFilter
 
 	l.SubscribeChannel <- *request
-
 }
 
 func (l *Listener) authenticate() error {
-	msg := new(AuthRequest)
-	msg.OP = "authentication"
-	msg.ID = l.UniqueID
-	msg.AppKey = l.Client.Config.AppKey
-	msg.SessionToken = l.Client.Session.SessionToken
 
-	if l.Conn == nil {
-		err := new(NoConnectionError)
-		return err
+	err := new(NoConnectionError)
+
+	if l.Conn != nil {
+
+		authenticationMessage := new(models.AuthenticationMessage)
+		authenticationMessage.SetOp("authentication")
+		authenticationMessage.SetID(l.UniqueID)
+		authenticationMessage.AppKey = l.Client.Config.AppKey
+		authenticationMessage.Session = l.Client.Session.SessionToken
+
+		b, err := authenticationMessage.MarshalJSON()
+		if err == nil {
+			_, err = l.Conn.Write(b)
+			if err == nil {
+				// TODO: Unlikely to exceed 4kB but probably need a nicer solution
+				buf := make([]byte, 4096)
+				l.Conn.Read(buf)
+				statusMessage := new(models.StatusMessage)
+				statusMessage.UnmarshalJSON(buf)
+				if statusMessage.StatusCode == "FAILURE" {
+					authenticationError := new(AuthenticationError)
+					err = authenticationError
+
+					log.WithFields(log.Fields{
+						"errorCode":    statusMessage.ErrorCode,
+						"errorMessage": statusMessage.ErrorMessage,
+					}).Error("Betfair Stream API - Failed to Authenticate")
+				} else {
+					err = nil
+
+					log.Debug("Betfair Stream API - Authenticated")
+				}
+			}
+		}
 	}
 
-	buf := bytes.NewBuffer(nil)
-	json.NewEncoder(buf).Encode(msg)
-
-	b := buf.Bytes()
-	l.Conn.Write(b)
-
-	resp := new(AuthResponse)
-	d := json.NewDecoder(l.Conn)
-
-	err := d.Decode(resp)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (l *Listener) readPump(errChan *chan error) {
@@ -134,22 +164,34 @@ func (l *Listener) readPump(errChan *chan error) {
 		return
 	}
 
-	d := json.NewDecoder(l.Conn)
-
 	for {
 		select {
 		case <-l.KillChannel:
 			return
 		default:
-			resp := new(MarketChangeMessage)
-			err := d.Decode(resp)
+			marketChangeMessage := new(models.MarketChangeMessage)
+			// TODO: Handle a disconnect and resubscribe
+			const chunkSize int = 65536
+			buf := make([]byte, chunkSize)
+			var err error
 
+			for {
+				tmp := make([]byte, chunkSize)
+				cb, err := l.Conn.Read(tmp)
+				if cb == 0 || err != io.EOF {
+					break
+				}
+				buf = append(buf, tmp...)
+			}
+
+			err = marketChangeMessage.UnmarshalJSON(buf)
+			if err == nil {
+				l.onData(*marketChangeMessage)
+			}
 			if err != nil {
 				*errChan <- err
 				return
 			}
-				
-			l.onData(*resp)
 		}
 	}
 }
@@ -175,15 +217,14 @@ func (l *Listener) writePump(errChan *chan error) {
 		l.Conn.Close()
 	}()
 	for {
-		buf := bytes.NewBuffer(nil)
-
 		select {
 		case <-l.KillChannel:
 			return
-		case sub := <-l.SubscribeChannel:
-			json.NewEncoder(buf).Encode(sub)
-			b := buf.Bytes()
-			_, err := l.Conn.Write(b)
+		case marketSubscriptionMessage := <-l.SubscribeChannel:
+			b, err := marketSubscriptionMessage.MarshalJSON()
+			if err == nil {
+				_, err = l.Conn.Write(b)
+			}
 			if err != nil {
 				*errChan <- err
 				return
@@ -198,9 +239,9 @@ func (l *Listener) writePump(errChan *chan error) {
 	}
 }
 
-func (l *Listener) onData(ChangeMessage MarketChangeMessage) {
+func (l *Listener) onData(ChangeMessage models.MarketChangeMessage) {
 
-	switch ChangeMessage.Operation {
+	switch ChangeMessage.Op() {
 	case "connection":
 		l.onConnection(ChangeMessage)
 	case "status":
@@ -212,16 +253,16 @@ func (l *Listener) onData(ChangeMessage MarketChangeMessage) {
 	}
 }
 
-func (l *Listener) onConnection(ChangeMessage MarketChangeMessage) {
-	// todo
+func (l *Listener) onConnection(ChangeMessage models.MarketChangeMessage) {
+	log.Debug("BetfairStreamAPI - Connected")
 }
 
-func (l *Listener) onStatus(ChangeMessage MarketChangeMessage) {
-	// todo
+func (l *Listener) onStatus(ChangeMessage models.MarketChangeMessage) {
+	log.Debug("BetfairStreamAPI - Status Message Received")
 }
 
-func (l *Listener) onChangeMessage(Stream Stream, ChangeMessage MarketChangeMessage) {
-	switch ChangeMessage.ChangeType {
+func (l *Listener) onChangeMessage(Stream Stream, ChangeMessage models.MarketChangeMessage) {
+	switch ChangeMessage.Ct {
 	case "SUB_IMAGE":
 		Stream.OnSubscribe(ChangeMessage)
 	case "RESUB_DELTA":

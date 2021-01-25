@@ -3,28 +3,30 @@ package streaming
 import (
 	"log"
 	"sort"
+
+	"github.com/belmegatron/gofair/streaming/models"
 )
 
-func CreateMarketCache(changeMessage MarketChangeMessage, marketChange MarketChange) *MarketCache {
+func CreateMarketCache(changeMessage *models.MarketChangeMessage, marketChange *models.MarketChange) *MarketCache {
 	cache := &MarketCache{
-		&changeMessage.PublishTime,
-		marketChange.MarketID,
-		&marketChange.TradedVolume,
+		&changeMessage.Pt,
+		marketChange.ID,
+		&marketChange.Tv,
 		marketChange.MarketDefinition,
 		make(map[int64]RunnerCache),
 	}
-	for _, runnerChange := range marketChange.RunnerChange {
-		cache.Runners[runnerChange.SelectionID] = *CreateRunnerCache(runnerChange)
+	for _, runnerChange := range marketChange.Rc {
+		cache.Runners[runnerChange.ID] = *CreateRunnerCache(runnerChange)
 	}
 	return cache
 }
 
-func CreateRunnerCache(change RunnerChange) *RunnerCache {
-	log.Println("Creating new runner cache", change.SelectionID)
+func CreateRunnerCache(change *models.RunnerChange) *RunnerCache {
+	log.Println("Creating new runner cache", change.ID)
 
 	// create traded data structure
 	var traded Available
-	for _, i := range change.Traded {
+	for _, i := range change.Trd {
 		traded.Prices = append(
 			traded.Prices,
 			PriceSize{i[0], i[1]},
@@ -34,7 +36,7 @@ func CreateRunnerCache(change RunnerChange) *RunnerCache {
 
 	// create availableToBack data structure
 	var availableToBack Available
-	for _, i := range change.AvailableToBack {
+	for _, i := range change.Atb {
 		availableToBack.Prices = append(
 			availableToBack.Prices,
 			PriceSize{i[0], i[1]},
@@ -44,7 +46,7 @@ func CreateRunnerCache(change RunnerChange) *RunnerCache {
 
 	// create availableToLay data structure
 	var availableToLay Available
-	for _, i := range change.AvailableToLay {
+	for _, i := range change.Atl {
 		availableToLay.Prices = append(
 			availableToLay.Prices,
 			PriceSize{i[0], i[1]},
@@ -54,7 +56,7 @@ func CreateRunnerCache(change RunnerChange) *RunnerCache {
 
 	// create startingPriceBack data structure
 	var startingPriceBack Available
-	for _, i := range change.StartingPriceBack {
+	for _, i := range change.Spb {
 		startingPriceBack.Prices = append(
 			startingPriceBack.Prices,
 			PriceSize{i[0], i[1]},
@@ -64,7 +66,7 @@ func CreateRunnerCache(change RunnerChange) *RunnerCache {
 
 	// create startingPriceLay data structure
 	var startingPriceLay Available
-	for _, i := range change.StartingPriceLay {
+	for _, i := range change.Spl {
 		startingPriceLay.Prices = append(
 			startingPriceLay.Prices,
 			PriceSize{i[0], i[1]},
@@ -74,7 +76,7 @@ func CreateRunnerCache(change RunnerChange) *RunnerCache {
 
 	// create bestAvailableToBack data structure
 	var bestAvailableToBack AvailablePosition
-	for _, i := range change.BestAvailableToBack {
+	for _, i := range change.Batb {
 		bestAvailableToBack.Prices = append(
 			bestAvailableToBack.Prices,
 			PositionPriceSize{i[0], i[1], i[2]},
@@ -84,7 +86,7 @@ func CreateRunnerCache(change RunnerChange) *RunnerCache {
 
 	// create bestAvailableToLay data structure
 	var bestAvailableToLay AvailablePosition
-	for _, i := range change.BestAvailableToLay {
+	for _, i := range change.Batl {
 		bestAvailableToLay.Prices = append(
 			bestAvailableToLay.Prices,
 			PositionPriceSize{i[0], i[1], i[2]},
@@ -94,7 +96,7 @@ func CreateRunnerCache(change RunnerChange) *RunnerCache {
 
 	// create bestDisplayAvailableToBack data structure
 	var bestDisplayAvailableToBack AvailablePosition
-	for _, i := range change.BestDisplayAvailableToBack {
+	for _, i := range change.Bdatb {
 		bestDisplayAvailableToBack.Prices = append(
 			bestDisplayAvailableToBack.Prices,
 			PositionPriceSize{i[0], i[1], i[2]},
@@ -104,7 +106,7 @@ func CreateRunnerCache(change RunnerChange) *RunnerCache {
 
 	// create bestDisplayAvailableToLay data structure
 	var bestDisplayAvailableToLay AvailablePosition
-	for _, i := range change.BestDisplayAvailableToLay {
+	for _, i := range change.Bdatl {
 		bestDisplayAvailableToLay.Prices = append(
 			bestDisplayAvailableToLay.Prices,
 			PositionPriceSize{i[0], i[1], i[2]},
@@ -113,18 +115,20 @@ func CreateRunnerCache(change RunnerChange) *RunnerCache {
 	bestDisplayAvailableToLay.Reverse = false
 
 	cache := &RunnerCache{
-		change.SelectionID,
-		&change.LastTradedPrice,
-		&change.TradedVolume,
-		&traded,
-		&availableToBack,
-		&availableToLay,
-		&startingPriceBack,
-		&startingPriceLay,
-		&bestAvailableToBack,
-		&bestAvailableToLay,
-		&bestDisplayAvailableToBack,
-		&bestDisplayAvailableToLay,
+		SelectionId:                change.ID,
+		LastTradedPrice:            &change.Ltp,
+		TradedVolume:               &change.Tv,
+		StartingPriceNear:          &change.Spn,
+		StartingPriceFar:           &change.Spf,
+		Traded:                     &traded,
+		AvailableToBack:            &availableToBack,
+		AvailableToLay:             &availableToLay,
+		StartingPriceBack:          &startingPriceBack,
+		StartingPriceLay:           &startingPriceLay,
+		BestAvailableToBack:        &bestAvailableToBack,
+		BestAvailableToLay:         &bestAvailableToLay,
+		BestDisplayAvailableToBack: &bestDisplayAvailableToBack,
+		BestDisplayAvailableToLay:  &bestDisplayAvailableToLay,
 	}
 	return cache
 }
@@ -272,11 +276,11 @@ func (available *Available) Update(updates [][]float64) {
 }
 
 type RunnerCache struct {
-	SelectionId     int64
-	LastTradedPrice *float64
-	TradedVolume    *float64
-	//StartingPriceNear 		*float64
-	//StartingPriceFar 		*float64
+	SelectionId                int64
+	LastTradedPrice            *float64
+	TradedVolume               *float64
+	StartingPriceNear          *float64
+	StartingPriceFar           *float64
 	Traded                     *Available
 	AvailableToBack            *Available
 	AvailableToLay             *Available
@@ -288,96 +292,96 @@ type RunnerCache struct {
 	BestDisplayAvailableToLay  *AvailablePosition
 }
 
-func (cache *RunnerCache) UpdateCache(change RunnerChange) {
-	if change.LastTradedPrice != 0 {
-		*cache.LastTradedPrice = change.LastTradedPrice
+func (cache *RunnerCache) UpdateCache(change *models.RunnerChange) {
+	if change.Ltp != 0 {
+		*cache.LastTradedPrice = change.Ltp
 	}
-	if change.TradedVolume != 0 {
-		*cache.TradedVolume = change.TradedVolume
+	if change.Tv != 0 {
+		*cache.TradedVolume = change.Tv
 	}
-	//if change.StartingPriceNear != 0 {
-	//	*cache.StartingPriceNear = change.StartingPriceNear
-	//}
-	//if change.StartingPriceFar != 0 {
-	//	*cache.StartingPriceFar = change.StartingPriceFar
-	//}
-	if len(change.Traded) > 0 {
-		cache.Traded.Update(change.Traded)
+	if change.Spn != 0 {
+		*cache.StartingPriceNear = change.Spn
 	}
-	if len(change.AvailableToBack) > 0 {
-		cache.AvailableToBack.Update(change.AvailableToBack)
+	if change.Spf != 0 {
+		*cache.StartingPriceFar = change.Spf
 	}
-	if len(change.AvailableToLay) > 0 {
-		cache.AvailableToLay.Update(change.AvailableToLay)
+	if len(change.Trd) > 0 {
+		cache.Traded.Update(change.Trd)
 	}
-	if len(change.StartingPriceBack) > 0 {
-		cache.StartingPriceBack.Update(change.StartingPriceBack)
+	if len(change.Atb) > 0 {
+		cache.AvailableToBack.Update(change.Atb)
 	}
-	if len(change.StartingPriceLay) > 0 {
-		cache.StartingPriceLay.Update(change.StartingPriceLay)
+	if len(change.Atl) > 0 {
+		cache.AvailableToLay.Update(change.Atl)
 	}
-	if len(change.BestAvailableToBack) > 0 {
-		cache.BestAvailableToBack.Update(change.BestAvailableToBack)
+	if len(change.Spb) > 0 {
+		cache.StartingPriceBack.Update(change.Spb)
 	}
-	if len(change.BestAvailableToLay) > 0 {
-		cache.BestAvailableToLay.Update(change.BestAvailableToLay)
+	if len(change.Spl) > 0 {
+		cache.StartingPriceLay.Update(change.Spl)
 	}
-	if len(change.BestDisplayAvailableToBack) > 0 {
-		cache.BestDisplayAvailableToBack.Update(change.BestDisplayAvailableToBack)
+	if len(change.Batb) > 0 {
+		cache.BestAvailableToBack.Update(change.Batb)
 	}
-	if len(change.BestDisplayAvailableToLay) > 0 {
-		cache.BestDisplayAvailableToLay.Update(change.BestDisplayAvailableToLay)
+	if len(change.Batl) > 0 {
+		cache.BestAvailableToLay.Update(change.Batl)
+	}
+	if len(change.Bdatb) > 0 {
+		cache.BestDisplayAvailableToBack.Update(change.Bdatb)
+	}
+	if len(change.Bdatl) > 0 {
+		cache.BestDisplayAvailableToLay.Update(change.Bdatl)
 	}
 }
 
 type MarketCache struct {
-	PublishTime      *int
-	MarketId         string
+	PublishTime      *int64
+	MarketID         string
 	TradedVolume     *float64
-	MarketDefinition *MarketDefinition
+	MarketDefinition *models.MarketDefinition
 	Runners          map[int64]RunnerCache
 }
 
-func (cache *MarketCache) UpdateCache(changeMessage MarketChangeMessage, marketChange MarketChange) {
-	*cache.PublishTime = changeMessage.PublishTime
+func (cache *MarketCache) UpdateCache(changeMessage *models.MarketChangeMessage, marketChange *models.MarketChange) {
+	*cache.PublishTime = changeMessage.Pt
 
 	if marketChange.MarketDefinition != nil {
 		*cache.MarketDefinition = *marketChange.MarketDefinition
 	}
-	if marketChange.TradedVolume != 0 {
-		*cache.TradedVolume = marketChange.TradedVolume
+	if marketChange.Tv != 0 {
+		*cache.TradedVolume = marketChange.Tv
 	}
-	if marketChange.RunnerChange != nil {
-		for _, runnerChange := range marketChange.RunnerChange {
-			if runnerCache, ok := cache.Runners[runnerChange.SelectionID]; ok {
+	if marketChange.Rc != nil {
+		for _, runnerChange := range marketChange.Rc {
+			if runnerCache, ok := cache.Runners[runnerChange.ID]; ok {
 				runnerCache.UpdateCache(runnerChange)
 			} else {
-				cache.Runners[runnerChange.SelectionID] = *CreateRunnerCache(runnerChange)
+				cache.Runners[runnerChange.ID] = *CreateRunnerCache(runnerChange)
 			}
 		}
 	}
 }
 
-func (cache *MarketCache) GetRunnerDefinition(selectionId int64) RunnerDefinition {
+func (cache *MarketCache) GetRunnerDefinition(selectionId int64) models.RunnerDefinition {
 	for i := range cache.MarketDefinition.Runners {
-		if cache.MarketDefinition.Runners[i].SelectionID == selectionId {
-			return cache.MarketDefinition.Runners[i]
+		if cache.MarketDefinition.Runners[i].ID == selectionId {
+			return *cache.MarketDefinition.Runners[i]
 		}
 	}
-	return RunnerDefinition{}
+	return models.RunnerDefinition{}
 }
 
 // snap functions
 
-func (cache *RunnerCache) Snap(definition RunnerDefinition) Runner {
+func (cache *RunnerCache) Snap(definition models.RunnerDefinition) Runner {
 	exchangePrices := ExchangePrices{
 		AvailableToBack: cache.AvailableToBack.Prices,
 		AvailableToLay:  cache.AvailableToLay.Prices,
 		TradedVolume:    cache.Traded.Prices,
 	}
 	return Runner{
-		SelectionId:      cache.SelectionId,
-		Handicap:         definition.Handicap,
+		SelectionID:      cache.SelectionId,
+		Handicap:         definition.Hc,
 		Status:           definition.Status,
 		AdjustmentFactor: definition.AdjustmentFactor,
 		LastPriceTraded:  *cache.LastTradedPrice,
@@ -396,12 +400,12 @@ func (cache *MarketCache) Snap() MarketBook {
 	}
 	return MarketBook{
 		PublishTime:           *cache.PublishTime,
-		MarketId:              cache.MarketId,
+		MarketID:              cache.MarketID,
 		Status:                cache.MarketDefinition.Status,
 		BetDelay:              cache.MarketDefinition.BetDelay,
 		BspReconciled:         cache.MarketDefinition.BspReconciled,
 		Complete:              cache.MarketDefinition.Complete,
-		Inplay:                cache.MarketDefinition.Inplay,
+		InPlay:                cache.MarketDefinition.InPlay,
 		NumberOfWinners:       cache.MarketDefinition.NumberOfWinners,
 		NumberOfRunners:       len(cache.Runners),
 		NumberOfActiveRunners: cache.MarketDefinition.NumberOfActiveRunners,

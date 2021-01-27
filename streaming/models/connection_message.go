@@ -37,7 +37,7 @@ func (m *ConnectionMessage) SetID(val int32) {
 
 // Op gets the op of this subtype
 func (m *ConnectionMessage) Op() string {
-	return "ConnectionMessage"
+	return "connection"
 }
 
 // SetOp sets the op of this subtype
@@ -77,7 +77,6 @@ func (m *ConnectionMessage) UnmarshalJSON(raw []byte) error {
 	var result ConnectionMessage
 
 	result.idField = base.ID
-
 	if base.Op != result.Op() {
 		/* Not the type we're looking for. */
 		return errors.New(422, "invalid op value: %q", base.Op)

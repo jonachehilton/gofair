@@ -1,6 +1,7 @@
 package streaming
 
 import (
+	"bufio"
 	"crypto/tls"
 	"time"
 
@@ -73,7 +74,7 @@ type Listener struct {
 	killChannel      chan int
 	ErrorChannel     chan error
 	// TODO: change to interface so that OrderBook can be accepted
-	ResultsChannel   chan MarketBook 
+	ResultsChannel chan MarketBook
 }
 
 func (l *Listener) addMarketStream() {
@@ -90,24 +91,31 @@ func (l *Listener) connect() (bool, error) {
 
 	cfg := &tls.Config{Certificates: []tls.Certificate{*l.client.Certificates}}
 	conn, err := tls.Dial("tcp", gofair.Endpoints.StreamIntegration, cfg)
+	c := bufio.NewReader(conn)
 
 	if err == nil {
-		connectionMessage := new(models.ConnectionMessage)
-		// TODO: Unlikely to exceed 4kB but probably need a nicer solution
-		const bufSize int = 4096
-		buf := make([]byte, bufSize)
-		cb, err := conn.Read(buf)
-		if cb > 0 && err == nil {
-			err = connectionMessage.UnmarshalJSON(buf)
-			if err == nil {
-				if connectionMessage.ConnectionID != "" {
-					success = true
-					l.connectionID = connectionMessage.ConnectionID
-					l.conn = conn
-					log.Debug("BetfairStreamAPI - Connected")
-				}
-			}
+
+		buf, _, err := c.ReadLine()
+		if err != nil {
+			return success, err
 		}
+
+		connectionMessage := new(models.ConnectionMessage)
+		err = connectionMessage.UnmarshalJSON(buf)
+		if err != nil {
+			return success, err
+		}
+
+		if connectionMessage.ConnectionID != "" {
+			success = true
+			l.connectionID = connectionMessage.ConnectionID
+			l.conn = conn
+			log.Debug("BetfairStreamAPI - Connected")
+		} else {
+			err := new(ConnectionError)
+			return success, err
+		}
+
 	}
 
 	return success, nil
@@ -125,45 +133,60 @@ func (l *Listener) Subscribe(marketFilter *models.MarketFilter, marketDataFilter
 	l.subscribeChannel <- *request
 }
 
+func (l *Listener) write(b []byte) (int, error) {
+	// Every message is in json & terminated with a line feed (CRLF)
+	b = append(b, []byte{'\r', '\n'}...)
+	return l.conn.Write(b)
+}
+
 func (l *Listener) authenticate() error {
 
-	err := new(NoConnectionError)
-
-	if l.conn != nil {
-
-		authenticationMessage := new(models.AuthenticationMessage)
-		authenticationMessage.SetOp("authentication")
-		authenticationMessage.SetID(l.uniqueID)
-		authenticationMessage.AppKey = l.client.Config.AppKey
-		authenticationMessage.Session = l.client.Session.SessionToken
-
-		b, err := authenticationMessage.MarshalJSON()
-		if err == nil {
-			_, err = l.conn.Write(b)
-			if err == nil {
-				// TODO: Unlikely to exceed 4kB but probably need a nicer solution
-				buf := make([]byte, 4096)
-				l.conn.Read(buf)
-				statusMessage := new(models.StatusMessage)
-				statusMessage.UnmarshalJSON(buf)
-				if statusMessage.StatusCode == "FAILURE" {
-					authenticationError := new(AuthenticationError)
-					err = authenticationError
-
-					log.WithFields(log.Fields{
-						"errorCode":    statusMessage.ErrorCode,
-						"errorMessage": statusMessage.ErrorMessage,
-					}).Error("Betfair Stream API - Failed to Authenticate")
-				} else {
-					err = nil
-
-					log.Debug("Betfair Stream API - Authenticated")
-				}
-			}
-		}
+	if l.conn == nil {
+		return new(NoConnectionError)
 	}
 
-	return err
+	c := bufio.NewReader(l.conn)
+
+	authenticationMessage := new(models.AuthenticationMessage)
+	authenticationMessage.SetOp("authentication")
+	authenticationMessage.SetID(l.uniqueID)
+	authenticationMessage.AppKey = l.client.Config.AppKey
+	authenticationMessage.Session = l.client.Session.SessionToken
+
+	b, err := authenticationMessage.MarshalJSON()
+	if err != nil {
+		return err
+	}
+
+	_, err = l.write(b)
+	if err != nil {
+		return err
+	}
+
+	buf, _, err := c.ReadLine()
+	if err != nil {
+		return err
+	}
+
+	statusMessage := new(models.StatusMessage)
+	err = statusMessage.UnmarshalJSON(buf)
+	if err != nil {
+		return err
+	}
+
+	if statusMessage.StatusCode == "FAILURE" {
+		authenticationError := new(AuthenticationError)
+		err = authenticationError
+		log.WithFields(log.Fields{
+			"errorCode":    statusMessage.ErrorCode,
+			"errorMessage": statusMessage.ErrorMessage,
+		}).Error("Betfair Stream API - Failed to Authenticate")
+		return err
+	}
+
+	log.Debug("Betfair Stream API - Authenticated")
+
+	return nil
 }
 
 func (l *Listener) readPump(errChan *chan error) {
@@ -174,6 +197,8 @@ func (l *Listener) readPump(errChan *chan error) {
 		return
 	}
 
+	c := bufio.NewReader(l.conn)
+
 	for {
 		select {
 		case <-l.killChannel:
@@ -181,19 +206,7 @@ func (l *Listener) readPump(errChan *chan error) {
 		default:
 			marketChangeMessage := new(models.MarketChangeMessage)
 			// TODO: Handle a disconnect and resubscribe
-			const chunkSize int = 65536
-			buf := make([]byte, chunkSize)
-			var err error
-
-			for {
-				tmp := make([]byte, chunkSize)
-				cb, err := l.conn.Read(tmp)
-				if cb == 0 || err != nil {
-					break
-				}
-				buf = append(buf, tmp...)
-			}
-
+			buf, _, err := c.ReadLine()
 			err = marketChangeMessage.UnmarshalJSON(buf)
 			if err == nil {
 				l.onData(*marketChangeMessage)
@@ -233,14 +246,14 @@ func (l *Listener) writePump(errChan *chan error) {
 		case marketSubscriptionMessage := <-l.subscribeChannel:
 			b, err := marketSubscriptionMessage.MarshalJSON()
 			if err == nil {
-				_, err = l.conn.Write(b)
+				_, err = l.write(b)
 			}
 			if err != nil {
 				*errChan <- err
 				return
 			}
 		case <-ticker.C:
-			_, err := l.conn.Write([]byte{})
+			_, err := l.write([]byte{})
 			if err != nil {
 				*errChan <- err
 				return

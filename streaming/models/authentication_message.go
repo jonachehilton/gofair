@@ -40,7 +40,7 @@ func (m *AuthenticationMessage) SetID(val int32) {
 
 // Op gets the op of this subtype
 func (m *AuthenticationMessage) Op() string {
-	return "AuthenticationMessage"
+	return "authentication"
 }
 
 // SetOp sets the op of this subtype

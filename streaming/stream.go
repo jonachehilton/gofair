@@ -47,11 +47,11 @@ func (ms *MarketStream) OnHeartbeat(changeMessage models.MarketChangeMessage) {
 }
 
 func (ms *MarketStream) OnUpdate(changeMessage models.MarketChangeMessage) {
-	
+
 	if ms.InitialClk == "" {
 		ms.InitialClk = changeMessage.Clk
 	}
-	
+
 	ms.Clk = changeMessage.Clk
 
 	for _, marketChange := range changeMessage.Mc {

@@ -15,3 +15,9 @@ type AuthenticationError struct{}
 func (err *AuthenticationError) Error() string {
 	return fmt.Sprintf("Failed to authenticate")
 }
+
+type ConnectionError struct{}
+
+func (err *ConnectionError) Error() string {
+	return fmt.Sprintf("Failed to connect.")
+}

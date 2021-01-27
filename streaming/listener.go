@@ -126,7 +126,6 @@ func (l *Listener) connect() (bool, error) {
 func (l *Listener) Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
 
 	request := new(models.MarketSubscriptionMessage)
-	request.SetOp("marketSubscription")
 	request.SetID(l.uniqueID)
 	l.uniqueID++
 	request.MarketFilter = marketFilter
@@ -150,7 +149,6 @@ func (l *Listener) authenticate() error {
 	c := bufio.NewReader(l.conn)
 
 	authenticationMessage := new(models.AuthenticationMessage)
-	authenticationMessage.SetOp("authentication")
 	authenticationMessage.SetID(l.uniqueID)
 	authenticationMessage.AppKey = l.client.Config.AppKey
 	authenticationMessage.Session = l.client.Session.SessionToken

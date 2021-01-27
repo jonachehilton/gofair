@@ -25,6 +25,7 @@ func ListenerFactory(client *gofair.Client) *Listener {
 	return l
 }
 
+// Start performs the Connection and Authentication steps and initializes the read/write goroutines
 func (l *Listener) Start(errChan *chan error) error {
 
 	success, err := l.connect()
@@ -47,6 +48,7 @@ func (l *Listener) Start(errChan *chan error) error {
 	return nil
 }
 
+// Stop closes the connection and kills the associated read/write goroutines
 func (l *Listener) Stop() error {
 	l.killChannel <- 1
 	err := l.conn.Close()
@@ -175,8 +177,7 @@ func (l *Listener) authenticate() error {
 	}
 
 	if statusMessage.StatusCode == "FAILURE" {
-		authenticationError := new(AuthenticationError)
-		err = authenticationError
+		err := new(AuthenticationError)
 		log.WithFields(log.Fields{
 			"errorCode":    statusMessage.ErrorCode,
 			"errorMessage": statusMessage.ErrorMessage,
@@ -207,14 +208,16 @@ func (l *Listener) readPump(errChan *chan error) {
 			marketChangeMessage := new(models.MarketChangeMessage)
 			// TODO: Handle a disconnect and resubscribe
 			buf, _, err := c.ReadLine()
-			err = marketChangeMessage.UnmarshalJSON(buf)
-			if err == nil {
-				l.onData(*marketChangeMessage)
-			}
 			if err != nil {
 				*errChan <- err
 				return
 			}
+			err = marketChangeMessage.UnmarshalJSON(buf)
+			if err != nil {
+				*errChan <- err
+				return
+			}
+			l.onData(*marketChangeMessage)
 		}
 	}
 }
@@ -245,13 +248,11 @@ func (l *Listener) writePump(errChan *chan error) {
 			return
 		case marketSubscriptionMessage := <-l.subscribeChannel:
 			b, err := marketSubscriptionMessage.MarshalJSON()
-			if err == nil {
-				_, err = l.write(b)
-			}
 			if err != nil {
 				*errChan <- err
 				return
 			}
+			_, err = l.write(b)
 		case <-ticker.C:
 			_, err := l.write([]byte{})
 			if err != nil {

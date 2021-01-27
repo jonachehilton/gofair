@@ -52,7 +52,7 @@ func (m *OrderSubscriptionMessage) SetID(val int32) {
 
 // Op gets the op of this subtype
 func (m *OrderSubscriptionMessage) Op() string {
-	return "OrderSubscriptionMessage"
+	return "orderSubscription"
 }
 
 // SetOp sets the op of this subtype

@@ -65,7 +65,7 @@ func (m *MarketChangeMessage) SetID(val int32) {
 
 // Op gets the op of this subtype
 func (m *MarketChangeMessage) Op() string {
-	return "MarketChangeMessage"
+	return "mcm"
 }
 
 // SetOp sets the op of this subtype

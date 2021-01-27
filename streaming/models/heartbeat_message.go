@@ -36,7 +36,7 @@ func (m *HeartbeatMessage) SetID(val int32) {
 
 // Op gets the op of this subtype
 func (m *HeartbeatMessage) Op() string {
-	return "HeartbeatMessage"
+	return "heartbeat"
 }
 
 // SetOp sets the op of this subtype

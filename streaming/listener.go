@@ -3,6 +3,7 @@ package streaming
 import (
 	"bufio"
 	"crypto/tls"
+	"encoding/json"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -203,19 +204,28 @@ func (l *Listener) readPump(errChan *chan error) {
 		case <-l.killChannel:
 			return
 		default:
-			marketChangeMessage := new(models.MarketChangeMessage)
 			// TODO: Handle a disconnect and resubscribe
 			buf, _, err := c.ReadLine()
 			if err != nil {
 				*errChan <- err
 				return
 			}
-			err = marketChangeMessage.UnmarshalJSON(buf)
+
+			tmp := make(map[string]json.RawMessage, 0)
+			var op string
+			err = json.Unmarshal(buf, &tmp)
 			if err != nil {
 				*errChan <- err
 				return
 			}
-			l.onData(*marketChangeMessage)
+
+			err = json.Unmarshal(tmp["op"], &op)
+			if err != nil {
+				*errChan <- err
+				return
+			}
+
+			l.onData(op, buf)
 		}
 	}
 }
@@ -261,37 +271,45 @@ func (l *Listener) writePump(errChan *chan error) {
 	}
 }
 
-func (l *Listener) onData(ChangeMessage models.MarketChangeMessage) {
+func (l *Listener) onData(op string, data []byte) {
 
-	switch ChangeMessage.Op() {
+	switch op {
 	case "connection":
-		l.onConnection(ChangeMessage)
+		l.onConnection(data)
 	case "status":
-		l.onStatus(ChangeMessage)
+		l.onStatus(data)
 	case "mcm":
-		l.onChangeMessage(l.MarketStream, ChangeMessage)
+		l.onChangeMessage(l.MarketStream, data)
 	case "ocm":
-		l.onChangeMessage(l.OrderStream, ChangeMessage)
+		l.onChangeMessage(l.OrderStream, data)
 	}
 }
 
-func (l *Listener) onConnection(ChangeMessage models.MarketChangeMessage) {
+func (l *Listener) onConnection(data []byte) {
 	log.Debug("BetfairStreamAPI - Connected")
 }
 
-func (l *Listener) onStatus(ChangeMessage models.MarketChangeMessage) {
+func (l *Listener) onStatus(data []byte) {
 	log.Debug("BetfairStreamAPI - Status Message Received")
 }
 
-func (l *Listener) onChangeMessage(Stream Stream, ChangeMessage models.MarketChangeMessage) {
-	switch ChangeMessage.Ct {
+func (l *Listener) onChangeMessage(Stream Stream, data []byte) {
+
+	marketChangeMessage := new(models.MarketChangeMessage)
+	err := marketChangeMessage.UnmarshalJSON(data)
+	if err != nil {
+		log.Error("Failed to unmarshal MarketChangeMessage.")
+		return
+	}
+
+	switch marketChangeMessage.Ct {
 	case "SUB_IMAGE":
-		Stream.OnSubscribe(ChangeMessage)
+		Stream.OnSubscribe(*marketChangeMessage)
 	case "RESUB_DELTA":
-		Stream.OnResubscribe(ChangeMessage)
+		Stream.OnResubscribe(*marketChangeMessage)
 	case "HEARTBEAT":
-		Stream.OnHeartbeat(ChangeMessage)
+		Stream.OnHeartbeat(*marketChangeMessage)
 	default:
-		Stream.OnUpdate(ChangeMessage)
+		Stream.OnUpdate(*marketChangeMessage)
 	}
 }

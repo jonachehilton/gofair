@@ -2,6 +2,7 @@ package streaming
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"time"
@@ -16,6 +17,7 @@ import (
 func ListenerFactory(client *gofair.Client) *Listener {
 	l := new(Listener)
 	l.client = client
+
 	l.subscribeChannel = make(chan models.MarketSubscriptionMessage, 64)
 	l.killChannel = make(chan int, 64)
 	l.ResultsChannel = make(chan MarketBook, 64)
@@ -67,6 +69,7 @@ type Listener struct {
 	connectionID string
 	conn         *tls.Conn
 	client       *gofair.Client
+	scanner      bufio.Scanner
 
 	// Public
 	MarketStream *MarketStream
@@ -94,11 +97,10 @@ func (l *Listener) connect() (bool, error) {
 
 	cfg := &tls.Config{Certificates: []tls.Certificate{*l.client.Certificates}}
 	conn, err := tls.Dial("tcp", gofair.Endpoints.StreamIntegration, cfg)
-	c := bufio.NewReader(conn)
 
 	if err == nil {
 
-		buf, _, err := c.ReadLine()
+		buf, err := l.read()
 		if err != nil {
 			return success, err
 		}
@@ -113,6 +115,9 @@ func (l *Listener) connect() (bool, error) {
 			success = true
 			l.connectionID = connectionMessage.ConnectionID
 			l.conn = conn
+			// This scanner allows us to keep reading bytes from the connection until we encounter "\r\n"
+			l.scanner = *bufio.NewScanner(l.conn)
+			l.scanner.Split(ScanCRLF)
 			log.Debug("BetfairStreamAPI - Connected")
 		} else {
 			err := new(ConnectionError)
@@ -141,6 +146,17 @@ func (l *Listener) write(b []byte) (int, error) {
 	return l.conn.Write(b)
 }
 
+func (l *Listener) read() ([]byte, error) {
+
+	l.scanner.Scan()
+
+	if err := l.scanner.Err(); err != nil {
+		return []byte{}, err
+	}
+
+	return l.scanner.Bytes(), nil
+}
+
 func (l *Listener) authenticate() error {
 
 	if l.conn == nil {
@@ -164,7 +180,7 @@ func (l *Listener) authenticate() error {
 		return err
 	}
 
-	buf, _, err := c.ReadLine()
+	buf, err := l.read()
 	if err != nil {
 		return err
 	}
@@ -189,6 +205,30 @@ func (l *Listener) authenticate() error {
 	return nil
 }
 
+// dropCR drops a terminal \r from the data.
+func dropCR(data []byte) []byte {
+	if len(data) > 0 && data[len(data)-1] == '\r' {
+		return data[0 : len(data)-1]
+	}
+	return data
+}
+
+func ScanCRLF(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
+	}
+	if i := bytes.Index(data, []byte{'\r', '\n'}); i >= 0 {
+		// We have a full newline-terminated line.
+		return i + 2, dropCR(data[0:i]), nil
+	}
+	// If we're at EOF, we have a final, non-terminated line. Return it.
+	if atEOF {
+		return len(data), dropCR(data), nil
+	}
+	// Request more data.
+	return 0, nil, nil
+}
+
 func (l *Listener) readPump(errChan *chan error) {
 
 	if l.conn == nil {
@@ -197,15 +237,12 @@ func (l *Listener) readPump(errChan *chan error) {
 		return
 	}
 
-	c := bufio.NewReader(l.conn)
-
 	for {
 		select {
 		case <-l.killChannel:
 			return
 		default:
-			// TODO: Handle a disconnect and resubscribe
-			buf, _, err := c.ReadLine()
+			buf, err := l.read()
 			if err != nil {
 				*errChan <- err
 				return
@@ -245,11 +282,6 @@ const (
 )
 
 func (l *Listener) writePump(errChan *chan error) {
-	ticker := time.NewTicker(pingPeriod)
-	defer func() {
-		ticker.Stop()
-		l.conn.Close()
-	}()
 	for {
 		select {
 		case <-l.killChannel:
@@ -261,12 +293,6 @@ func (l *Listener) writePump(errChan *chan error) {
 				return
 			}
 			_, err = l.write(b)
-		case <-ticker.C:
-			_, err := l.write([]byte{})
-			if err != nil {
-				*errChan <- err
-				return
-			}
 		}
 	}
 }

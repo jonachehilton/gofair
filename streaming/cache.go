@@ -375,9 +375,11 @@ func (cache *MarketCache) GetRunnerDefinition(selectionId int64) models.RunnerDe
 
 func (cache *RunnerCache) Snap(definition models.RunnerDefinition) Runner {
 	exchangePrices := ExchangePrices{
-		AvailableToBack: cache.AvailableToBack.Prices,
-		AvailableToLay:  cache.AvailableToLay.Prices,
-		TradedVolume:    cache.Traded.Prices,
+		BestAvailableToBack: cache.BestAvailableToBack.Prices,
+		BestAvailableToLay:  cache.BestAvailableToLay.Prices,
+		AvailableToBack:     cache.AvailableToBack.Prices,
+		AvailableToLay:      cache.AvailableToLay.Prices,
+		TradedVolume:        cache.Traded.Prices,
 	}
 	return Runner{
 		SelectionID:      cache.SelectionId,

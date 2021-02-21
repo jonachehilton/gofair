@@ -34,7 +34,9 @@ type Runner struct {
 }
 
 type ExchangePrices struct {
-	AvailableToBack []PriceSize
-	AvailableToLay  []PriceSize
-	TradedVolume    []PriceSize
+	BestAvailableToBack []PositionPriceSize
+	BestAvailableToLay  []PositionPriceSize
+	AvailableToBack     []PriceSize
+	AvailableToLay      []PriceSize
+	TradedVolume        []PriceSize
 }

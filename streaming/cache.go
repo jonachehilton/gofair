@@ -154,6 +154,17 @@ func (a ByPrice) Len() int           { return len(a) }
 func (a ByPrice) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByPrice) Less(i, j int) bool { return a[i].Price < a[j].Price }
 
+func (a ByPrice) GetLastItem() PriceSize {
+
+	if len(a) == 1 {
+		return a[0]
+	} else if len(a) > 1 {
+		return a[len(a)-1]
+	}
+
+	return PriceSize{}
+}
+
 type PositionPriceSize struct {
 	Position float64
 	Price    float64
@@ -167,8 +178,19 @@ func (a ByPosition) Len() int           { return len(a) }
 func (a ByPosition) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByPosition) Less(i, j int) bool { return a[i].Position < a[j].Position }
 
+func (a ByPosition) GetLastItem() PositionPriceSize {
+
+	if len(a) == 1 {
+		return a[0]
+	} else if len(a) > 1 {
+		return a[len(a)-1]
+	}
+
+	return PositionPriceSize{}
+}
+
 type AvailablePosition struct {
-	Prices  []PositionPriceSize
+	Prices  ByPosition
 	Reverse bool
 }
 
@@ -222,7 +244,7 @@ func (available *AvailablePosition) Update(updates [][]float64) {
 }
 
 type Available struct {
-	Prices  []PriceSize
+	Prices  ByPrice
 	Reverse bool
 }
 
@@ -374,12 +396,13 @@ func (cache *MarketCache) GetRunnerDefinition(selectionId int64) models.RunnerDe
 // snap functions
 
 func (cache *RunnerCache) Snap(definition models.RunnerDefinition) Runner {
+
 	exchangePrices := ExchangePrices{
-		BestAvailableToBack: cache.BestAvailableToBack.Prices,
-		BestAvailableToLay:  cache.BestAvailableToLay.Prices,
-		AvailableToBack:     cache.AvailableToBack.Prices,
-		AvailableToLay:      cache.AvailableToLay.Prices,
-		TradedVolume:        cache.Traded.Prices,
+		BestAvailableToBack: cache.BestAvailableToBack.Prices.GetLastItem(),
+		BestAvailableToLay:  cache.BestAvailableToLay.Prices.GetLastItem(),
+		AvailableToBack:     cache.AvailableToBack.Prices.GetLastItem(),
+		AvailableToLay:      cache.AvailableToLay.Prices.GetLastItem(),
+		TradedVolume:        cache.Traded.Prices.GetLastItem(),
 	}
 	return Runner{
 		SelectionID:      cache.SelectionId,

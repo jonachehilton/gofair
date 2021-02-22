@@ -97,10 +97,11 @@ func (l *Listener) connect() (bool, error) {
 
 	cfg := &tls.Config{Certificates: []tls.Certificate{*l.client.Certificates}}
 	conn, err := tls.Dial("tcp", gofair.Endpoints.StreamIntegration, cfg)
+	c := bufio.NewReader(conn)
 
 	if err == nil {
 
-		buf, err := l.read()
+		buf, _, err := c.ReadLine()
 		if err != nil {
 			return success, err
 		}
@@ -162,8 +163,6 @@ func (l *Listener) authenticate() error {
 	if l.conn == nil {
 		return new(NoConnectionError)
 	}
-
-	c := bufio.NewReader(l.conn)
 
 	authenticationMessage := new(models.AuthenticationMessage)
 	authenticationMessage.SetID(l.uniqueID)

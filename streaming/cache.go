@@ -236,7 +236,7 @@ func (available *AvailablePosition) Update(updates [][]float64) {
 				}
 			}
 		}
-		if updated == false && update[2] != 0 {
+		if !updated && update[2] != 0 {
 			available.AppendPrice(update)
 		}
 	}
@@ -290,7 +290,7 @@ func (available *Available) Update(updates [][]float64) {
 				}
 			}
 		}
-		if updated == false && update[1] != 0 {
+		if !updated && update[1] != 0 {
 			available.AppendPrice(update)
 		}
 	}

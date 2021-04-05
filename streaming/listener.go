@@ -5,27 +5,34 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/belmegatron/gofair"
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
 // ListenerFactory creates a Listener struct
-func ListenerFactory(client *gofair.Client) *Listener {
+func ListenerFactory(client *gofair.Client, endpoint string, log *logrus.Logger) (*Listener, error) {
 	l := new(Listener)
 	l.client = client
 
+	l.log = log
+
+	if endpoint != gofair.Endpoints.Stream && endpoint != gofair.Endpoints.StreamIntegration {
+		return nil, &EndpointError{}
+	}
+
+	l.endpoint = endpoint
+
 	l.subscribeChannel = make(chan models.MarketSubscriptionMessage, 64)
-	l.killChannel = make(chan int, 64)
+	l.killChannel = make(chan int)
 	l.ResultsChannel = make(chan MarketBook, 64)
 	l.ErrorChannel = make(chan error, 64)
 	l.addMarketStream()
 	l.addOrderStream()
 
-	return l
+	return l, nil
 }
 
 // Start performs the Connection and Authentication steps and initializes the read/write goroutines
@@ -67,6 +74,8 @@ type Listener struct {
 	// Private
 	uniqueID     int32
 	connectionID string
+	endpoint     string
+	log          *logrus.Logger
 	conn         *tls.Conn
 	client       *gofair.Client
 	scanner      bufio.Scanner
@@ -96,7 +105,7 @@ func (l *Listener) connect() (bool, error) {
 	var success bool = false
 
 	cfg := &tls.Config{Certificates: []tls.Certificate{*l.client.Certificates}}
-	conn, err := tls.Dial("tcp", gofair.Endpoints.StreamIntegration, cfg)
+	conn, err := tls.Dial("tcp", l.endpoint, cfg)
 	c := bufio.NewReader(conn)
 
 	if err == nil {
@@ -119,7 +128,6 @@ func (l *Listener) connect() (bool, error) {
 			// This scanner allows us to keep reading bytes from the connection until we encounter "\r\n"
 			l.scanner = *bufio.NewScanner(l.conn)
 			l.scanner.Split(ScanCRLF)
-			log.Debug("BetfairStreamAPI - Connected")
 		} else {
 			err := new(ConnectionError)
 			return success, err
@@ -192,14 +200,14 @@ func (l *Listener) authenticate() error {
 
 	if statusMessage.StatusCode == "FAILURE" {
 		err := new(AuthenticationError)
-		log.WithFields(log.Fields{
+		l.log.WithFields(logrus.Fields{
 			"errorCode":    statusMessage.ErrorCode,
 			"errorMessage": statusMessage.ErrorMessage,
-		}).Error("Betfair Stream API - Failed to Authenticate")
+		}).Error("Failed to Authenticate")
 		return err
 	}
 
-	log.Debug("Betfair Stream API - Authenticated")
+	l.log.Debug("Authenticated")
 
 	return nil
 }
@@ -247,7 +255,7 @@ func (l *Listener) readPump(errChan *chan error) {
 				return
 			}
 
-			tmp := make(map[string]json.RawMessage, 0)
+			tmp := make(map[string]json.RawMessage)
 			var op string
 			err = json.Unmarshal(buf, &tmp)
 			if err != nil {
@@ -266,20 +274,6 @@ func (l *Listener) readPump(errChan *chan error) {
 	}
 }
 
-const (
-	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
-
-	// Send pings to peer with this period. Must be less than pongWait.
-	pingPeriod = (pongWait * 9) / 10
-
-	// Maximum message size allowed from peer.
-	maxMessageSize = 1024
-)
-
 func (l *Listener) writePump(errChan *chan error) {
 	for {
 		select {
@@ -291,7 +285,7 @@ func (l *Listener) writePump(errChan *chan error) {
 				*errChan <- err
 				return
 			}
-			_, err = l.write(b)
+			l.write(b)
 		}
 	}
 }
@@ -311,11 +305,11 @@ func (l *Listener) onData(op string, data []byte) {
 }
 
 func (l *Listener) onConnection(data []byte) {
-	log.Debug("BetfairStreamAPI - Connected")
+	l.log.Debug("Connected")
 }
 
 func (l *Listener) onStatus(data []byte) {
-	log.Debug("BetfairStreamAPI - Status Message Received")
+	l.log.Debug("Status Message Received")
 }
 
 func (l *Listener) onChangeMessage(Stream Stream, data []byte) {
@@ -323,7 +317,7 @@ func (l *Listener) onChangeMessage(Stream Stream, data []byte) {
 	marketChangeMessage := new(models.MarketChangeMessage)
 	err := marketChangeMessage.UnmarshalJSON(data)
 	if err != nil {
-		log.Error("Failed to unmarshal MarketChangeMessage.")
+		l.log.Error("Failed to unmarshal MarketChangeMessage.")
 		return
 	}
 

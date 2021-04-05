@@ -28,7 +28,7 @@ func ListenerFactory(client *gofair.Client, endpoint string, log *logrus.Logger)
 	l.subscribeChannel = make(chan models.MarketSubscriptionMessage, 64)
 	l.killChannel = make(chan int)
 	l.ResultsChannel = make(chan MarketBook, 64)
-	l.ErrorChannel = make(chan error, 64)
+	l.ErrorChannel = make(chan error, 16)
 	l.addMarketStream()
 	l.addOrderStream()
 
@@ -38,35 +38,36 @@ func ListenerFactory(client *gofair.Client, endpoint string, log *logrus.Logger)
 // Start performs the Connection and Authentication steps and initializes the read/write goroutines
 func (l *Listener) Start(errChan *chan error) error {
 
-	success, err := l.connect()
+	err := l.connect()
 
 	if err != nil {
 		return err
 	}
 
-	if success {
-		err = l.authenticate()
+	err = l.authenticate()
 
-		if err != nil {
-			return err
-		}
-
-		go l.readPump(errChan)
-		go l.writePump(errChan)
+	if err != nil {
+		return err
 	}
+
+	go l.readPump(errChan)
+	go l.writePump(errChan)
 
 	return nil
 }
 
 // Stop closes the connection and kills the associated read/write goroutines
 func (l *Listener) Stop() error {
+
 	l.killChannel <- 1
+
 	err := l.conn.Close()
+
 	if err != nil {
 		return err
 	}
-	return nil
 
+	return nil
 }
 
 type Listener struct {
@@ -100,42 +101,38 @@ func (l *Listener) addMarketStream() {
 
 func (l *Listener) addOrderStream() {}
 
-func (l *Listener) connect() (bool, error) {
-
-	var success bool = false
+func (l *Listener) connect() error {
 
 	cfg := &tls.Config{Certificates: []tls.Certificate{*l.client.Certificates}}
 	conn, err := tls.Dial("tcp", l.endpoint, cfg)
-	c := bufio.NewReader(conn)
 
-	if err == nil {
-
-		buf, _, err := c.ReadLine()
-		if err != nil {
-			return success, err
-		}
-
-		connectionMessage := new(models.ConnectionMessage)
-		err = connectionMessage.UnmarshalJSON(buf)
-		if err != nil {
-			return success, err
-		}
-
-		if connectionMessage.ConnectionID != "" {
-			success = true
-			l.connectionID = connectionMessage.ConnectionID
-			l.conn = conn
-			// This scanner allows us to keep reading bytes from the connection until we encounter "\r\n"
-			l.scanner = *bufio.NewScanner(l.conn)
-			l.scanner.Split(ScanCRLF)
-		} else {
-			err := new(ConnectionError)
-			return success, err
-		}
-
+	if err != nil {
+		return err
 	}
 
-	return success, nil
+	c := bufio.NewReader(conn)
+	buf, _, err := c.ReadLine()
+	if err != nil {
+		return err
+	}
+
+	connectionMessage := new(models.ConnectionMessage)
+	err = connectionMessage.UnmarshalJSON(buf)
+	if err != nil {
+		return err
+	}
+
+	if connectionMessage.ConnectionID == "" {
+		return &ConnectionError{}
+	}
+
+	l.connectionID = connectionMessage.ConnectionID
+	l.conn = conn
+	// This scanner allows us to keep reading bytes from the connection until we encounter "\r\n"
+	l.scanner = *bufio.NewScanner(l.conn)
+	l.scanner.Split(ScanCRLF)
+
+	return nil
 }
 
 func (l *Listener) Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
@@ -169,7 +166,7 @@ func (l *Listener) read() ([]byte, error) {
 func (l *Listener) authenticate() error {
 
 	if l.conn == nil {
-		return new(NoConnectionError)
+		return &NoConnectionError{}
 	}
 
 	authenticationMessage := new(models.AuthenticationMessage)

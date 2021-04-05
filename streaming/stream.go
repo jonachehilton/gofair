@@ -1,7 +1,7 @@
 package streaming
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/belmegatron/gofair/streaming/models"
 )
@@ -14,6 +14,7 @@ type Stream interface {
 }
 
 type MarketStream struct {
+	log           *logrus.Logger
 	OutputChannel chan MarketBook
 	Cache         map[string]MarketCache
 	InitialClk    string
@@ -30,20 +31,20 @@ func getMarketIDs(mcm models.MarketChangeMessage) []string {
 
 func (ms *MarketStream) OnSubscribe(changeMessage models.MarketChangeMessage) {
 	marketIDs := getMarketIDs(changeMessage)
-	log.WithFields(log.Fields{
+	ms.log.WithFields(logrus.Fields{
 		"marketIDs": marketIDs,
-	}).Debug("BetfairStreamAPI - Subscribed to Betfair Market Changes")
+	}).Debug("Subscribed to Betfair Market Changes")
 }
 
 func (ms *MarketStream) OnResubscribe(changeMessage models.MarketChangeMessage) {
 	marketIDs := getMarketIDs(changeMessage)
-	log.WithFields(log.Fields{
+	ms.log.WithFields(logrus.Fields{
 		"marketIDs": marketIDs,
-	}).Debug("BetfairStreamAPI - Resubscribed to Betfair Market Changes")
+	}).Debug("Resubscribed to Betfair Market Changes")
 }
 
 func (ms *MarketStream) OnHeartbeat(changeMessage models.MarketChangeMessage) {
-	log.Debug("BetfairStreamAPI - Heartbeat")
+	ms.log.Debug("Heartbeat")
 }
 
 func (ms *MarketStream) OnUpdate(changeMessage models.MarketChangeMessage) {
@@ -64,9 +65,9 @@ func (ms *MarketStream) OnUpdate(changeMessage models.MarketChangeMessage) {
 			ms.Cache[marketChange.ID] = *marketCache
 			ms.OutputChannel <- marketCache.Snap()
 
-			log.WithFields(log.Fields{
+			ms.log.WithFields(logrus.Fields{
 				"marketID": marketChange.ID,
-			}).Debug("BetfairStreamAPI - Created new market cache")
+			}).Debug("Created new market cache")
 		}
 	}
 }

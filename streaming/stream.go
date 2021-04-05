@@ -30,10 +30,23 @@ func getMarketIDs(mcm models.MarketChangeMessage) []string {
 }
 
 func (ms *MarketStream) OnSubscribe(changeMessage models.MarketChangeMessage) {
+
 	marketIDs := getMarketIDs(changeMessage)
+
 	ms.log.WithFields(logrus.Fields{
 		"marketIDs": marketIDs,
 	}).Debug("Subscribed to Betfair Market Changes")
+
+	for _, marketChange := range changeMessage.Mc {
+
+		marketCache := CreateMarketCache(&changeMessage, marketChange)
+		ms.Cache[marketChange.ID] = *marketCache
+		ms.OutputChannel <- marketCache.Snap()
+
+		ms.log.WithFields(logrus.Fields{
+			"marketID": marketChange.ID,
+		}).Debug("Created new market cache")
+	}
 }
 
 func (ms *MarketStream) OnResubscribe(changeMessage models.MarketChangeMessage) {

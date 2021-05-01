@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type logoutResult struct {
+type LogoutResult struct {
 	Token   string `json:"token"`
 	Product string `json:"product"`
 	Status  string `json:"status"`
@@ -16,17 +16,17 @@ type logoutResult struct {
 }
 
 // Logout from the current session.
-func (c *Client) Logout() (logoutResult, error) {
+func (c *Client) Logout() (LogoutResult, error) {
 	// build url
 	url := createURL(Endpoints.Identity, "logout")
 
 	// make request
 	resp, err := logoutRequest(c, url)
 	if err != nil {
-		return *new(logoutResult), err
+		return *new(LogoutResult), err
 	}
 
-	var result logoutResult
+	var result LogoutResult
 
 	// parse json
 	err = json.Unmarshal(resp, &result)

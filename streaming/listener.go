@@ -28,8 +28,9 @@ func ListenerFactory(client *gofair.Client, endpoint string, log *logrus.Logger)
 	l.subscribeChannel = make(chan models.MarketSubscriptionMessage, 64)
 	l.killChannel = make(chan int)
 	l.ResultsChannel = make(chan MarketBook, 64)
-	l.ErrorChannel = make(chan error, 16)
-	l.addMarketStream()
+	l.ErrorChannel = make(chan error)
+
+	l.addMarketStream(l.log)
 	l.addOrderStream()
 
 	return l, nil
@@ -83,7 +84,7 @@ type Listener struct {
 
 	// Public
 	MarketStream *MarketStream
-	OrderStream  Stream
+	OrderStream  IStream
 
 	// Channels for IPC
 	subscribeChannel chan models.MarketSubscriptionMessage
@@ -93,8 +94,9 @@ type Listener struct {
 	ResultsChannel chan MarketBook
 }
 
-func (l *Listener) addMarketStream() {
+func (l *Listener) addMarketStream(log *logrus.Logger) {
 	l.MarketStream = new(MarketStream)
+	l.MarketStream.log = log
 	l.MarketStream.OutputChannel = l.ResultsChannel
 	l.MarketStream.Cache = make(map[string]MarketCache)
 }
@@ -309,7 +311,7 @@ func (l *Listener) onStatus(data []byte) {
 	l.log.Debug("Status Message Received")
 }
 
-func (l *Listener) onChangeMessage(Stream Stream, data []byte) {
+func (l *Listener) onChangeMessage(Stream IStream, data []byte) {
 
 	marketChangeMessage := new(models.MarketChangeMessage)
 	err := marketChangeMessage.UnmarshalJSON(data)

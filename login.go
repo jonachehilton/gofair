@@ -10,12 +10,12 @@ import (
 	"time"
 )
 
-type loginResult struct {
+type LoginResult struct {
 	LoginStatus  string `json:"loginStatus"`
 	SessionToken string `json:"sessionToken"`
 }
 
-func (c *Client) Login() (loginResult, error) {
+func (c *Client) Login() (LoginResult, error) {
 	// build body
 	body := strings.NewReader("username=" + c.Config.Username + "&password=" + c.Config.Password)
 
@@ -25,10 +25,10 @@ func (c *Client) Login() (loginResult, error) {
 	// make request
 	resp, err := loginRequest(c, url, body)
 	if err != nil {
-		return *new(loginResult), err
+		return *new(LoginResult), err
 	}
 
-	var result loginResult
+	var result LoginResult
 
 	// parse json
 	err = json.Unmarshal(resp, &result)

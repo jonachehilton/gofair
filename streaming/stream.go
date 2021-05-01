@@ -6,7 +6,7 @@ import (
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
-type Stream interface {
+type IStream interface {
 	OnSubscribe(ChangeMessage models.MarketChangeMessage)
 	OnResubscribe(ChangeMessage models.MarketChangeMessage)
 	OnHeartbeat(ChangeMessage models.MarketChangeMessage)
@@ -41,12 +41,8 @@ func (ms *MarketStream) OnSubscribe(changeMessage models.MarketChangeMessage) {
 
 		marketCache := CreateMarketCache(&changeMessage, marketChange)
 		ms.Cache[marketChange.ID] = *marketCache
-		ms.OutputChannel <- marketCache.Snap()
-
-		ms.log.WithFields(logrus.Fields{
-			"marketID": marketChange.ID,
-		}).Debug("Created new market cache")
 	}
+
 }
 
 func (ms *MarketStream) OnResubscribe(changeMessage models.MarketChangeMessage) {
@@ -77,10 +73,6 @@ func (ms *MarketStream) OnUpdate(changeMessage models.MarketChangeMessage) {
 			marketCache := CreateMarketCache(&changeMessage, marketChange)
 			ms.Cache[marketChange.ID] = *marketCache
 			ms.OutputChannel <- marketCache.Snap()
-
-			ms.log.WithFields(logrus.Fields{
-				"marketID": marketChange.ID,
-			}).Debug("Created new market cache")
 		}
 	}
 }

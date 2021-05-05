@@ -1,35 +1,35 @@
 package gofair
 
-type orderProjection string
-type priceData string
-type matchProjection string
-type marketStatus string
-type persistenceType string
-type orderType string
-type orderStatus string
-type executionReportStatus string
-type instructionReportStatus string
-type executionReportErrorCode string
+type OrderProjection string
+type PriceData string
+type MatchProjection string
+type MarketStatus string
+type PersistenceType string
+type OrderType string
+type OrderStatus string
+type ExecutionReportStatus string
+type InstructionReportStatus string
+type ExecutionReportErrorCode string
 
-// BackOrLay is the type associated with strings contained in the Side struct.
-type BackOrLay string
+// Side is the type associated with strings contained in the Side struct.
+type Side string
 
 // WeightConstant should be the type specified for const values relating to request limit calculations
 // https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Market+Data+Request+Limits
 type WeightConstant int
 
-// OrderProjection describes the orders you want to receive in the response.
-var OrderProjection = struct {
-	All, Executable, ExecutionComplete orderProjection
+// OrderProjectionEnum describes the orders you want to receive in the response.
+var OrderProjectionEnum = struct {
+	All, Executable, ExecutionComplete OrderProjection
 }{
 	All:               "ALL",
 	Executable:        "EXECUTABLE",
 	ExecutionComplete: "EXECUTION_COMPLETE",
 }
 
-// PriceData describes the basic price data you want to receive in the response.
-var PriceData = struct {
-	SPAvailable, SPTraded, ExBestOffers, ExAllOffers, ExTraded priceData
+// PriceDataEnum describes the basic price data you want to receive in the response.
+var PriceDataEnum = struct {
+	SPAvailable, SPTraded, ExBestOffers, ExAllOffers, ExTraded PriceData
 }{
 	SPAvailable:  "SP_AVAILABLE",
 	SPTraded:     "SP_TRADED",
@@ -38,18 +38,18 @@ var PriceData = struct {
 	ExTraded:     "EX_TRADED",
 }
 
-// MatchProjection describes the matches you want to receive in the response.
-var MatchProjection = struct {
-	NoRollup, RolledUpByPrice, RolledUpByAvgPrice matchProjection
+// MatchProjectionEnum describes the matches you want to receive in the response.
+var MatchProjectionEnum = struct {
+	NoRollup, RolledUpByPrice, RolledUpByAvgPrice MatchProjection
 }{
 	NoRollup:           "NO_ROLLUP",
 	RolledUpByPrice:    "ROLLED_UP_BY_PRICE",
 	RolledUpByAvgPrice: "ROLLED_UP_BY_AVG_PRICE",
 }
 
-// MarketStatus describes the status of the market, for example OPEN, SUSPENDED, CLOSED (settled), etc.
-var MarketStatus = struct {
-	Inactive, Open, Suspended, Closed marketStatus
+// MarketStatusEnum describes the status of the market, for example OPEN, SUSPENDED, CLOSED (settled), etc.
+var MarketStatusEnum = struct {
+	Inactive, Open, Suspended, Closed MarketStatus
 }{
 	Inactive:  "INACTIVE",
 	Open:      "OPEN",
@@ -57,27 +57,27 @@ var MarketStatus = struct {
 	Closed:    "CLOSED",
 }
 
-// PersistenceType describes what to do with the order at turn-in-play.
-var PersistenceType = struct {
-	Lapse, Persist, MarketOnClose persistenceType
+// PersistenceTypeEnum describes what to do with the order at turn-in-play.
+var PersistenceTypeEnum = struct {
+	Lapse, Persist, MarketOnClose PersistenceType
 }{
 	Lapse:         "LAPSE",
 	Persist:       "PERSIST",
 	MarketOnClose: "MARKET_ON_CLOSE",
 }
 
-// OrderType describes the BSP Order type.
-var OrderType = struct {
-	Limit, LimitOnClose, MarketOnClose orderType
+// OrderTypeEnum describes the BSP Order type.
+var OrderTypeEnum = struct {
+	Limit, LimitOnClose, MarketOnClose OrderType
 }{
 	Limit:         "LIMIT",
 	LimitOnClose:  "LIMIT_ON_CLOSE",
 	MarketOnClose: "MARKET_ON_CLOSE",
 }
 
-// OrderStatus should generally be either EXECUTABLE (an unmatched amount remains) or EXECUTION_COMPLETE (no unmatched amount remains).
-var OrderStatus = struct {
-	Pending, ExecutionComplete, Executable, Expired orderStatus
+// OrderStatusEnum should generally be either EXECUTABLE (an unmatched amount remains) or EXECUTION_COMPLETE (no unmatched amount remains).
+var OrderStatusEnum = struct {
+	Pending, ExecutionComplete, Executable, Expired OrderStatus
 }{
 	Pending:           "PENDING",
 	ExecutionComplete: "EXECUTION_COMPLETE",
@@ -85,16 +85,16 @@ var OrderStatus = struct {
 	Expired:           "EXPIRED",
 }
 
-// Side indicates if the bet is a Back or a Lay.
-var Side = struct {
-	Back, Lay BackOrLay
+// SideEnum indicates if the bet is a Back or a Lay.
+var SideEnum = struct {
+	Back, Lay Side
 }{
 	Back: "BACK",
 	Lay:  "LAY",
 }
 
-// Weight is a measure used by the Betfair Exchange API to describe the relative amount of data a particular type of request is expected to return.
-var Weight = struct {
+// WeightEnum is a measure used by the Betfair Exchange API to describe the relative amount of data a particular type of request is expected to return.
+var WeightEnum = struct {
 	MaxWeight,
 	MarketDescription,
 	RunnerDescription,
@@ -132,9 +132,9 @@ var Weight = struct {
 	NotApplicable:           4,
 }
 
-// ExecutionReportStatus describes the outcome of placing an order.
-var ExecutionReportStatus = struct {
-	Success, Failure, ProcessedWithErrors, Timeout executionReportStatus
+// ExecutionReportStatusEnum describes the outcome of placing an order.
+var ExecutionReportStatusEnum = struct {
+	Success, Failure, ProcessedWithErrors, Timeout ExecutionReportStatus
 }{
 	Success:             "SUCCESS",
 	Failure:             "FAILURE",
@@ -142,17 +142,17 @@ var ExecutionReportStatus = struct {
 	Timeout:             "TIMEOUT",
 }
 
-// InstructionReportStatus describes the outcome of a particular instruction being submitted.
-var InstructionReportStatus = struct {
-	Success, Failure, Timeout instructionReportStatus
+// InstructionReportStatusEnum describes the outcome of a particular instruction being submitted.
+var InstructionReportStatusEnum = struct {
+	Success, Failure, Timeout InstructionReportStatus
 }{
 	Success: "SUCCESS",
 	Failure: "FAILURE",
 	Timeout: "TIMEOUT",
 }
 
-// ExecutionReportErrorCode describes the potential errors contained within a PlaceExecutionReport.
-var ExecutionReportErrorCode = struct {
+// ExecutionReportErrorCodeEnum describes the potential errors contained within a PlaceExecutionReport.
+var ExecutionReportErrorCodeEnum = struct {
 	ErrorInMatcher,
 	ProcessedWithErrors,
 	BetActionError,
@@ -174,7 +174,7 @@ var ExecutionReportErrorCode = struct {
 	RegulatorIsNotAvailable,
 	TooManyInstructions,
 	InvalidMarketVersion,
-	InvalidProfitRatio executionReportErrorCode
+	InvalidProfitRatio ExecutionReportErrorCode
 }{
 	ErrorInMatcher:          "ERROR_IN_MATCHER",
 	ProcessedWithErrors:     "PROCESSED_WITH_ERRORS",

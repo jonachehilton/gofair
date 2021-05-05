@@ -199,21 +199,21 @@ func (b *Betting) ListMarketBook(marketIDs []string, displayOrders bool) ([]Mark
 	params := struct {
 		MarketIDs           []string         `json:"marketIds,omitempty"`
 		IsMarketDataDelayed bool             `json:"isMarketDataDelayed,omitempty"`
-		OrderProjection     orderProjection  `json:"orderProjection,omitempty"`
-		MatchProjection     matchProjection  `json:"matchProjection,omitempty"`
+		OrderProjection     OrderProjection  `json:"orderProjection,omitempty"`
+		MatchProjection     MatchProjection  `json:"matchProjection,omitempty"`
 		PriceProjection     *PriceProjection `json:"priceProjection,omitempty"`
 	}{
 		MarketIDs:           marketIDs,
 		IsMarketDataDelayed: false,
-		OrderProjection:     OrderProjection.Executable,
-		MatchProjection:     MatchProjection.RolledUpByAvgPrice,
+		OrderProjection:     OrderProjectionEnum.Executable,
+		MatchProjection:     MatchProjectionEnum.RolledUpByAvgPrice,
 		PriceProjection:     priceProjection,
 	}
 
-	if displayOrders == false {
-		params.OrderProjection = OrderProjection.All
+	if !displayOrders {
+		params.OrderProjection = OrderProjectionEnum.All
 		params.MatchProjection = ""
-		priceProjection.PriceData = append(priceProjection.PriceData, PriceData.ExBestOffers)
+		priceProjection.PriceData = append(priceProjection.PriceData, PriceDataEnum.ExBestOffers)
 		priceProjection.ExBestOffersOverrides.BestPricesDepth = 3
 	}
 
@@ -295,4 +295,30 @@ func (b *Betting) CancelOrders(marketID string, cancelInstructions []CancelInstr
 		return response, err
 	}
 	return response, err
+}
+
+func (b *Betting) ListCurrentOrders(betIDs []string, marketIDs []string, orderProjection OrderProjection) (CurrentOrderSummaryReport, error) {
+	// create url
+	url := createURL(Endpoints.Betting, "listCurrentOrders/")
+
+	// build request
+	params := struct {
+		BetIDs          []string        `json:"betIds,omitempty"`
+		MarketIDs       []string        `json:"marketIds,omitempty"`
+		OrderProjection OrderProjection `json:"orderProjection,omitempty"`
+	}{
+		BetIDs:          betIDs,
+		MarketIDs:       marketIDs,
+		OrderProjection: orderProjection,
+	}
+
+	var response CurrentOrderSummaryReport
+
+	// make request
+	err := b.Request(url, params, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, err
+
 }

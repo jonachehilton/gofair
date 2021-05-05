@@ -134,7 +134,7 @@ type ExBestOffersOverrides struct {
 }
 
 type PriceProjection struct {
-	PriceData             []priceData           `json:"priceData,omitempty"`
+	PriceData             []PriceData           `json:"priceData,omitempty"`
 	ExBestOffersOverrides ExBestOffersOverrides `json:"exBestOffersOverrides,omitempty"`
 	Virtualise            bool                  `json:"virtualise"`
 	RollOverStakes        bool                  `json:"rolloverStakes"`
@@ -143,7 +143,7 @@ type PriceProjection struct {
 type LimitOrder struct {
 	Size            float32         `json:"size,omitempty"`
 	Price           float32         `json:"price,omitempty"`
-	PersistenceType persistenceType `json:"persistenceType,omitempty"`
+	PersistenceType PersistenceType `json:"persistenceType,omitempty"`
 }
 
 type LimitOnCloseOrder struct {
@@ -177,10 +177,10 @@ type CancelInstructionReport struct {
 }
 
 type PlaceInstruction struct {
-	OrderType          orderType           `json:"orderType,omitempty"`
+	OrderType          OrderType           `json:"orderType,omitempty"`
 	SelectionID        int                 `json:"selectionId,omitempty"`
 	Handicap           float32             `json:"handicap"`
-	Side               BackOrLay           `json:"side,omitempty"`
+	Side               Side                `json:"side,omitempty"`
 	LimitOrder         LimitOrder          `json:"limitOrder,omitempty"`
 	LimitOnCloseOrder  *LimitOnCloseOrder  `json:"limitOnCloseOrder,omitempty"`
 	MarketOnCloseOrder *MarketOnCloseOrder `json:"marketOnCloseOrder,omitempty"`
@@ -188,9 +188,9 @@ type PlaceInstruction struct {
 }
 
 type PlaceInstructionReport struct {
-	Status              instructionReportStatus `json:"status"`
+	Status              InstructionReportStatus `json:"status"`
 	ErrorCode           string                  `json:"errorCode"`
-	OrderStatus         orderStatus             `json:"orderStatus"`
+	OrderStatus         OrderStatus             `json:"orderStatus"`
 	Instruction         PlaceInstruction        `json:"instruction"`
 	BetID               string                  `json:"betId"`
 	PlacedDate          time.Time               `json:"placedDate"`
@@ -200,8 +200,8 @@ type PlaceInstructionReport struct {
 
 type PlaceExecutionReport struct {
 	CustomerRef        string                   `json:"customerRef"`
-	Status             executionReportStatus    `json:"status"`
-	ErrorCode          executionReportErrorCode `json:"errorCode"`
+	Status             ExecutionReportStatus    `json:"status"`
+	ErrorCode          ExecutionReportErrorCode `json:"errorCode"`
 	MarketID           string                   `json:"marketId"`
 	InstructionReports []PlaceInstructionReport `json:"instructionReports"`
 }
@@ -240,7 +240,7 @@ type KeyLineDescription struct {
 type Match struct {
 	BetID     string    `json:"betId"`
 	MatchID   string    `json:"matchId"`
-	Side      BackOrLay `json:"side"`
+	Side      Side      `json:"side"`
 	Price     float32   `json:"price"`
 	Size      float32   `json:"size"`
 	MatchDate time.Time `json:"matchDate"`
@@ -321,4 +321,34 @@ type MarketFilter struct {
 type MarketDataFilter struct {
 	Fields       []string `json:"fields"`
 	LadderLevels int64    `json:"ladderLevels"`
+}
+
+type CurrentOrderSummary struct {
+	BetID               string          `json:"betId"`
+	MarketID            string          `json:"marketId"`
+	SelectionID         string          `json:"selectionId"`
+	Handicap            float64         `json:"handicap"`
+	PriceSize           PriceSize       `json:"priceSize"`
+	BSPLiability        float64         `json:"bspLiability"`
+	Side                Side            `json:"side"`
+	Status              OrderStatus     `json:"status"`
+	PersistenceType     PersistenceType `json:"persistenceType"`
+	OrderType           OrderType       `json:"orderType"`
+	PlacedDate          time.Time       `json:"placedDate"`
+	MatchedDate         time.Time       `json:"matchedDate"`
+	AveragePriceMatched float64         `json:"averagePriceMatched,omitempty"`
+	SizeMatched         float64         `json:"sizeMatched,omitempty"`
+	SizeRemaining       float64         `json:"sizeRemaining,omitempty"`
+	SizeLapsed          float64         `json:"sizeLapsed,omitempty"`
+	SizeCancelled       float64         `json:"sizeCancelled,omitempty"`
+	SizeVoided          float64         `json:"sizeVoided,omitempty"`
+	RegulatorAuthCode   string          `json:"regulatorAuthCode,omitempty"`
+	RegulatorCode       string          `json:"regulatorCode,omitempty"`
+	CustomerOrderRef    string          `json:"customerOrderRef,omitempty"`
+	CustomerStrategyRef string          `json:"customerOrderStrategy,omitempty"`
+}
+
+type CurrentOrderSummaryReport struct {
+	CurrentOrders []CurrentOrderSummary `json:"currentOrders"`
+	MoreAvailable bool                  `json:"moreAvailable"`
 }

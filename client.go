@@ -103,8 +103,6 @@ func (c *Client) SessionExpired() bool {
 		return true
 	}
 	duration := time.Since(c.Session.LoginTime)
-	if duration.Minutes() > 200 {
-		return true
-	}
-	return false
+
+	return duration.Minutes() > 200
 }

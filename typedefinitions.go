@@ -118,7 +118,7 @@ type metadata struct {
 	RunnerID int `json:"runnerId"`
 }
 
-type runnerCatalogue struct {
+type RunnerCatalogue struct {
 	SelectionID  int     `json:"selectionId"`
 	RunnerName   string  `json:"runnerName"`
 	SortPriority int     `json:"sortPriority"`
@@ -256,7 +256,7 @@ type MarketCatalogue struct {
 	Event                      Event                      `json:"event"`
 	EventType                  eventType                  `json:"eventType"`
 	MarketCatalogueDescription marketCatalogueDescription `json:"description"`
-	Runners                    []runnerCatalogue          `json:"runners"`
+	Runners                    []RunnerCatalogue          `json:"runners"`
 }
 
 // MarketBook holds the dynamic data in a market.

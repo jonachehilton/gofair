@@ -322,3 +322,24 @@ func (b *Betting) ListCurrentOrders(betIDs []string, marketIDs []string, orderPr
 	return response, err
 
 }
+
+func (b *Betting) GetAccountFunds() (AccountFundsResponse, error) {
+	// create url
+	url := createURL(Endpoints.Account, "getAccountFunds/")
+
+	// build request
+	params := struct {
+		Wallet string
+	}{
+		Wallet: "UK",	
+	}
+
+	var response AccountFundsResponse
+
+	// make request
+	err := b.Request(url, params, &response)
+	if err != nil {
+		return response, err
+	}
+	return response, err
+}

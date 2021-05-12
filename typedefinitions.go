@@ -352,3 +352,12 @@ type CurrentOrderSummaryReport struct {
 	CurrentOrders []CurrentOrderSummary `json:"currentOrders"`
 	MoreAvailable bool                  `json:"moreAvailable"`
 }
+
+type AccountFundsResponse struct {
+	AvailableToBetBalance float64 `json:"availableToBetBalance"`
+	Exposure              float64 `json:"exposure"`
+	RetainedCommission    float64 `json:"retainedCommission"`
+	ExposureLimit         float64 `json:"exposureLimit"`
+	DiscountRate          float64 `json:"discountRate"`
+	PointsBalance         int     `json:"pointsBalance"`
+}

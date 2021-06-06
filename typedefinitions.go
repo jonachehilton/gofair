@@ -326,7 +326,7 @@ type MarketDataFilter struct {
 type CurrentOrderSummary struct {
 	BetID               string          `json:"betId"`
 	MarketID            string          `json:"marketId"`
-	SelectionID         string          `json:"selectionId"`
+	SelectionID         int             `json:"selectionId"`
 	Handicap            float64         `json:"handicap"`
 	PriceSize           PriceSize       `json:"priceSize"`
 	BSPLiability        float64         `json:"bspLiability"`

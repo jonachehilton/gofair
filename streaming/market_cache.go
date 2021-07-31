@@ -1,7 +1,6 @@
 package streaming
 
 import (
-	"log"
 	"sort"
 
 	"github.com/belmegatron/gofair/streaming/models"
@@ -22,7 +21,6 @@ func CreateMarketCache(changeMessage *models.MarketChangeMessage, marketChange *
 }
 
 func CreateRunnerCache(change *models.RunnerChange) *RunnerCache {
-	log.Println("Creating new runner cache", change.ID)
 
 	// create traded data structure
 	var traded Available

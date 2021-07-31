@@ -12,26 +12,61 @@ import (
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
-// ListenerFactory creates a Listener struct
-func ListenerFactory(client *gofair.Client, endpoint string, log *logrus.Logger) (*Listener, error) {
+type IMarketStream interface {
+	Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter)
+	OnSubscribe(ChangeMessage models.MarketChangeMessage)
+	OnResubscribe(ChangeMessage models.MarketChangeMessage)
+	OnHeartbeat(ChangeMessage models.MarketChangeMessage)
+	OnUpdate(ChangeMessage models.MarketChangeMessage)
+}
+
+type IOrderStream interface {
+	OnSubscribe(ChangeMessage models.OrderChangeMessage)
+	OnResubscribe(ChangeMessage models.OrderChangeMessage)
+	OnHeartbeat(ChangeMessage models.OrderChangeMessage)
+	OnUpdate(ChangeMessage models.OrderChangeMessage)
+}
+
+type Listener struct {
+	uniqueID     int32
+	connectionID string
+	endpoint     string
+	log          *logrus.Logger
+	conn         *tls.Conn
+	client       *gofair.Client
+	scanner      bufio.Scanner
+
+	MarketStream IMarketStream
+	OrderStream  IOrderStream
+
+	marketSubscriptionRequest chan models.MarketSubscriptionMessage
+	orderSubscriptionRequest  chan models.OrderSubscriptionMessage
+	killChannel               chan int
+	ErrorChannel              chan error
+
+	marketUpdates chan MarketBook
+	// TODO: Change this to correct type
+	orderUpdates chan interface{}
+}
+
+// NewListener creates a Listener struct
+func NewListener(client *gofair.Client, endpoint string, log *logrus.Logger) (*Listener, error) {
 	l := new(Listener)
 	l.client = client
-
+	l.endpoint = endpoint
 	l.log = log
 
 	if endpoint != gofair.Endpoints.Stream && endpoint != gofair.Endpoints.StreamIntegration {
 		return nil, &EndpointError{}
 	}
 
-	l.endpoint = endpoint
-
-	l.subscribeChannel = make(chan models.MarketSubscriptionMessage, 64)
+	l.marketSubscriptionRequest = make(chan models.MarketSubscriptionMessage, 64)
 	l.killChannel = make(chan int)
-	l.ResultsChannel = make(chan MarketBook, 64)
+	l.marketUpdates = make(chan MarketBook, 64)
 	l.ErrorChannel = make(chan error)
 
-	l.addMarketStream(l.log)
-	l.addOrderStream()
+	l.MarketStream = NewMarketStream(l, l.log, &l.marketUpdates)
+	l.OrderStream = NewOrderStream(l, l.log)
 
 	return l, nil
 }
@@ -71,38 +106,6 @@ func (l *Listener) Stop() error {
 	return nil
 }
 
-type Listener struct {
-
-	// Private
-	uniqueID     int32
-	connectionID string
-	endpoint     string
-	log          *logrus.Logger
-	conn         *tls.Conn
-	client       *gofair.Client
-	scanner      bufio.Scanner
-
-	// Public
-	MarketStream *MarketStream
-	OrderStream  IStream
-
-	// Channels for IPC
-	subscribeChannel chan models.MarketSubscriptionMessage
-	killChannel      chan int
-	ErrorChannel     chan error
-	// TODO: change to interface so that OrderBook can be accepted
-	ResultsChannel chan MarketBook
-}
-
-func (l *Listener) addMarketStream(log *logrus.Logger) {
-	l.MarketStream = new(MarketStream)
-	l.MarketStream.log = log
-	l.MarketStream.OutputChannel = l.ResultsChannel
-	l.MarketStream.Cache = make(map[string]MarketCache)
-}
-
-func (l *Listener) addOrderStream() {}
-
 func (l *Listener) connect() error {
 
 	cfg := &tls.Config{Certificates: []tls.Certificate{*l.client.Certificates}}
@@ -135,17 +138,6 @@ func (l *Listener) connect() error {
 	l.scanner.Split(ScanCRLF)
 
 	return nil
-}
-
-func (l *Listener) Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
-
-	request := new(models.MarketSubscriptionMessage)
-	request.SetID(l.uniqueID)
-	l.uniqueID++
-	request.MarketFilter = marketFilter
-	request.MarketDataFilter = marketDataFilter
-
-	l.subscribeChannel <- *request
 }
 
 func (l *Listener) write(b []byte) (int, error) {
@@ -198,12 +190,13 @@ func (l *Listener) authenticate() error {
 	}
 
 	if statusMessage.StatusCode == "FAILURE" {
-		err := new(AuthenticationError)
+
 		l.log.WithFields(logrus.Fields{
 			"errorCode":    statusMessage.ErrorCode,
 			"errorMessage": statusMessage.ErrorMessage,
 		}).Error("Failed to Authenticate")
-		return err
+
+		return &AuthenticationError{}
 	}
 
 	l.log.Debug("Authenticated")
@@ -254,6 +247,7 @@ func (l *Listener) readPump(errChan *chan error) {
 				return
 			}
 
+			// Unmarshal raw bytes to JSON
 			tmp := make(map[string]json.RawMessage)
 			var op string
 			err = json.Unmarshal(buf, &tmp)
@@ -262,6 +256,7 @@ func (l *Listener) readPump(errChan *chan error) {
 				return
 			}
 
+			// Peek to see the op code
 			err = json.Unmarshal(tmp["op"], &op)
 			if err != nil {
 				*errChan <- err
@@ -276,15 +271,27 @@ func (l *Listener) readPump(errChan *chan error) {
 func (l *Listener) writePump(errChan *chan error) {
 	for {
 		select {
+
 		case <-l.killChannel:
 			return
-		case marketSubscriptionMessage := <-l.subscribeChannel:
+
+		case marketSubscriptionMessage := <-l.marketSubscriptionRequest:
 			b, err := marketSubscriptionMessage.MarshalJSON()
 			if err != nil {
 				*errChan <- err
 				return
 			}
+
 			l.write(b)
+
+		case orderSubscriptionMessage := <-l.orderSubscriptionRequest:
+			b, err := orderSubscriptionMessage.MarshalJSON()
+			if err != nil {
+				*errChan <- err
+				return
+			}
+			l.write(b)
+			
 		}
 	}
 }
@@ -297,9 +304,9 @@ func (l *Listener) onData(op string, data []byte) {
 	case "status":
 		l.onStatus(data)
 	case "mcm":
-		l.onChangeMessage(l.MarketStream, data)
+		l.onMarketChangeMessage(l.MarketStream, data)
 	case "ocm":
-		l.onChangeMessage(l.OrderStream, data)
+		l.onOrderChangeMessage(l.OrderStream, data)
 	}
 }
 
@@ -311,9 +318,10 @@ func (l *Listener) onStatus(data []byte) {
 	l.log.Debug("Status Message Received")
 }
 
-func (l *Listener) onChangeMessage(Stream IStream, data []byte) {
+func (l *Listener) onMarketChangeMessage(Stream IMarketStream, data []byte) {
 
 	marketChangeMessage := new(models.MarketChangeMessage)
+
 	err := marketChangeMessage.UnmarshalJSON(data)
 	if err != nil {
 		l.log.Error("Failed to unmarshal MarketChangeMessage.")
@@ -329,5 +337,27 @@ func (l *Listener) onChangeMessage(Stream IStream, data []byte) {
 		Stream.OnHeartbeat(*marketChangeMessage)
 	default:
 		Stream.OnUpdate(*marketChangeMessage)
+	}
+}
+
+func (l *Listener) onOrderChangeMessage(Stream IOrderStream, data []byte) {
+
+	orderChangeMessage := new(models.OrderChangeMessage)
+
+	err := orderChangeMessage.UnmarshalJSON(data)
+	if err != nil {
+		l.log.Error("Failed to unmarshal OrderChangeMessage.")
+		return
+	}
+
+	switch orderChangeMessage.Ct {
+	case "SUB_IMAGE":
+		Stream.OnSubscribe(*orderChangeMessage)
+	case "RESUB_DELTA":
+		Stream.OnResubscribe(*orderChangeMessage)
+	case "HEARTBEAT":
+		Stream.OnHeartbeat(*orderChangeMessage)
+	default:
+		Stream.OnUpdate(*orderChangeMessage)
 	}
 }

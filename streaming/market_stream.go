@@ -6,19 +6,32 @@ import (
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
-type IStream interface {
-	OnSubscribe(ChangeMessage models.MarketChangeMessage)
-	OnResubscribe(ChangeMessage models.MarketChangeMessage)
-	OnHeartbeat(ChangeMessage models.MarketChangeMessage)
-	OnUpdate(ChangeMessage models.MarketChangeMessage)
-}
-
 type MarketStream struct {
+	listener      *Listener
 	log           *logrus.Logger
 	OutputChannel chan MarketBook
 	Cache         map[string]MarketCache
 	InitialClk    string
 	Clk           string
+}
+
+func NewMarketStream(listener *Listener, log *logrus.Logger, marketUpdates *chan MarketBook) *MarketStream {
+	marketStream := new(MarketStream)
+	marketStream.log = log
+	marketStream.OutputChannel = *marketUpdates
+	marketStream.Cache = make(map[string]MarketCache)
+	return marketStream
+}
+
+func (ms *MarketStream) Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
+
+	request := new(models.MarketSubscriptionMessage)
+	request.SetID(ms.listener.uniqueID)
+	ms.listener.uniqueID++
+	request.MarketFilter = marketFilter
+	request.MarketDataFilter = marketDataFilter
+
+	ms.listener.marketSubscriptionRequest <- *request
 }
 
 func getMarketIDs(mcm models.MarketChangeMessage) []string {
@@ -42,7 +55,6 @@ func (ms *MarketStream) OnSubscribe(changeMessage models.MarketChangeMessage) {
 		marketCache := CreateMarketCache(&changeMessage, marketChange)
 		ms.Cache[marketChange.ID] = *marketCache
 	}
-
 }
 
 func (ms *MarketStream) OnResubscribe(changeMessage models.MarketChangeMessage) {

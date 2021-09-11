@@ -4,17 +4,14 @@ import (
 	"crypto/tls"
 	"strings"
 	"time"
-)
+	"encoding/json"
+	"errors"
+	"io/ioutil"
+	"net/http"
 
-// Config holds login data
-type Config struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	AppKey   string `json:"api_key"`
-	CertFile string `json:"ssl_cert"`
-	KeyFile  string `json:"ssl_key"`
-	Locale   string
-}
+	"github.com/belmegatron/gofair/streaming"
+
+)
 
 type Session struct {
 	SessionToken string
@@ -28,29 +25,60 @@ type Client struct {
 	Certificates *tls.Certificate
 	Betting      *Betting
 	Account      *Account
-	Streaming    *Streaming
-	Historical   *Historical
+	Streaming    *streaming.Streaming
 }
 
-// Betting object
-type Betting struct {
-	Client *Client
+func createURL(endpoint string, method string) string {
+	return endpoint + method
 }
 
-// Account object
-type Account struct {
-	Client *Client
+// Request issues a HTTP POST to the Betfair Exchange API Endpoint specified.
+func (c *Client) request(url string, params interface{}, v interface{}) error {
+
+	bytes, err := json.Marshal(params)
+
+	if err != nil {
+		return err
+	}
+
+	body := strings.NewReader(string(bytes))
+
+	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		return err
+	}
+
+	// set headers
+	req.Header.Set("X-Application", c.Config.AppKey)
+	req.Header.Set("X-Authentication", c.Session.SessionToken)
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Connection", "keep-alive")
+
+	client := &http.Client{}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New(resp.Status)
+	}
+	if err := json.Unmarshal(data, v); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// Streaming object
-type Streaming struct {
-	Client *Client
-}
-
-// Historical object
-type Historical struct {
-	Client *Client
-}
 
 // NewClient creates a new Betfair client.
 func NewClient(config *Config) (*Client, error) {
@@ -79,20 +107,13 @@ func NewClient(config *Config) (*Client, error) {
 	c.Config = config
 
 	// create betting
-	c.Betting = new(Betting)
-	c.Betting.Client = c
+	c.Betting = &Betting{Client: c}
 
 	// create account
-	c.Account = new(Account)
-	c.Account.Client = c
+	c.Account = &Account{Client: c}
 
 	// create streaming
-	c.Streaming = new(Streaming)
-	c.Streaming.Client = c
-
-	// create historical
-	c.Historical = new(Historical)
-	c.Historical.Client = c
+	c.Streaming = &streaming.Streaming{Client: c}
 
 	return c, nil
 }

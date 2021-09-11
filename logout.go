@@ -23,7 +23,7 @@ func (c *Client) Logout() (LogoutResult, error) {
 	// make request
 	resp, err := logoutRequest(c, url)
 	if err != nil {
-		return *new(LogoutResult), err
+		return LogoutResult{}, err
 	}
 
 	var result LogoutResult

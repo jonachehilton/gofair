@@ -40,3 +40,7 @@ type ExchangePrices struct {
 	AvailableToLay      PriceSize
 	TradedVolume        PriceSize
 }
+
+type MarketSubscriptionResponse struct {
+	SubscribedMarketIDs []string
+}

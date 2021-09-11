@@ -204,21 +204,3 @@ const (
 	MinimumStakeSizeGBP = 2.00
 )
 
-// Endpoints contains all the Betfair Exchange API endpoints.
-var Endpoints = struct {
-	Login,
-	Identity,
-	Betting,
-	Account,
-	Navigation,
-	Stream,
-	StreamIntegration string
-}{
-	Login:             "https://identitysso-api.betfair.com/api/",
-	Identity:          "https://identitysso.betfair.com/api/",
-	Betting:           "https://api.betfair.com/exchange/betting/rest/v1.0/",
-	Account:           "https://api.betfair.com/exchange/account/rest/v1.0/",
-	Navigation:        "https://api.betfair.com/exchange/betting/rest/v1/en/navigation/menu.json",
-	Stream:            "stream-api.betfair.com:443",             // Live
-	StreamIntegration: "stream-api-integration.betfair.com:443", // For Testing
-}

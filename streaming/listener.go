@@ -8,7 +8,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/belmegatron/gofair"
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
@@ -28,44 +27,66 @@ type IOrderStream interface {
 }
 
 type Listener struct {
-	uniqueID     int32
+
+	// Unique ID that must be assigned to a listener
+	uid          int32
 	connectionID string
-	endpoint     string
-	log          *logrus.Logger
-	conn         *tls.Conn
-	client       *gofair.Client
-	scanner      bufio.Scanner
+
+	// Live/Testing Streaming API endpoint
+	endpoint string
+
+	// Logger instance for listener object
+	log *logrus.Logger
+
+	// TLS connection object to Streaming API endpoint
+	conn  *tls.Conn
+	// TLS Certificate used to authenticate to Streaming API endpoint
+	certs *tls.Certificate
+
+	scanner bufio.Scanner
 
 	MarketStream IMarketStream
 	OrderStream  IOrderStream
 
+	// Outgoing Requests
 	marketSubscriptionRequest chan models.MarketSubscriptionMessage
 	orderSubscriptionRequest  chan models.OrderSubscriptionMessage
-	killChannel               chan int
-	ErrorChannel              chan error
 
-	marketUpdates chan MarketBook
+	// Incoming Responses
+	IncomingMarketData   chan MarketBook
+	SubscriptionResponse chan MarketSubscriptionResponse
+	ErrorChannel         chan error
+
+	// Terminate read/write goroutines
+	killChannel chan int
+
 	// TODO: Change this to correct type
-	orderUpdates chan interface{}
+	OrderUpdates chan interface{}
 }
 
 // NewListener creates a Listener struct
-func NewListener(client *gofair.Client, endpoint string, log *logrus.Logger) (*Listener, error) {
+func NewListener(endpoint string, log *logrus.Logger, certs *tls.Certificate) (*Listener, error) {
 	l := new(Listener)
-	l.client = client
 	l.endpoint = endpoint
 	l.log = log
 
-	if endpoint != gofair.Endpoints.Stream && endpoint != gofair.Endpoints.StreamIntegration {
+	if endpoint != streamEndpoint && endpoint != streamIntegrationEndpoint {
 		return nil, &EndpointError{}
 	}
 
+	// Set up Outgoing Request Channels
 	l.marketSubscriptionRequest = make(chan models.MarketSubscriptionMessage, 64)
-	l.killChannel = make(chan int)
-	l.marketUpdates = make(chan MarketBook, 64)
+	l.orderSubscriptionRequest = make(chan models.OrderSubscriptionMessage, 1)
+
+	// Set up Incoming Response Channels
+	l.IncomingMarketData = make(chan MarketBook, 64)
+	l.SubscriptionResponse = make(chan MarketSubscriptionResponse, 64)
 	l.ErrorChannel = make(chan error)
 
-	l.MarketStream = NewMarketStream(l, l.log, &l.marketUpdates)
+	// Set up kill channel
+	l.killChannel = make(chan int)
+
+	l.MarketStream = NewMarketStream(l, l.log, &l.IncomingMarketData)
 	l.OrderStream = NewOrderStream(l, l.log)
 
 	return l, nil
@@ -108,7 +129,7 @@ func (l *Listener) Stop() error {
 
 func (l *Listener) connect() error {
 
-	cfg := &tls.Config{Certificates: []tls.Certificate{*l.client.Certificates}}
+	cfg := &tls.Config{Certificates: []tls.Certificate{*l.certs}}
 	conn, err := tls.Dial("tcp", l.endpoint, cfg)
 
 	if err != nil {
@@ -135,9 +156,26 @@ func (l *Listener) connect() error {
 	l.conn = conn
 	// This scanner allows us to keep reading bytes from the connection until we encounter "\r\n"
 	l.scanner = *bufio.NewScanner(l.conn)
-	l.scanner.Split(ScanCRLF)
+	l.scanner.Split(scanCRLF)
 
 	return nil
+}
+
+func (l *Listener) Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
+
+	marketSubscriptionRequest := new(models.MarketSubscriptionMessage)
+	marketSubscriptionRequest.SetID(l.uid)
+	marketSubscriptionRequest.MarketFilter = marketFilter
+	marketSubscriptionRequest.MarketDataFilter = marketDataFilter
+
+	l.marketSubscriptionRequest <- *marketSubscriptionRequest
+
+	orderSubscriptionRequest := new(models.OrderSubscriptionMessage)
+	orderSubscriptionRequest.SetID(l.uid)
+	orderSubscriptionRequest.SegmentationEnabled = true
+	l.orderSubscriptionRequest <- *orderSubscriptionRequest
+
+	l.uid++
 }
 
 func (l *Listener) write(b []byte) (int, error) {
@@ -164,7 +202,7 @@ func (l *Listener) authenticate() error {
 	}
 
 	authenticationMessage := new(models.AuthenticationMessage)
-	authenticationMessage.SetID(l.uniqueID)
+	authenticationMessage.SetID(l.uid)
 	authenticationMessage.AppKey = l.client.Config.AppKey
 	authenticationMessage.Session = l.client.Session.SessionToken
 
@@ -212,7 +250,7 @@ func dropCR(data []byte) []byte {
 	return data
 }
 
-func ScanCRLF(data []byte, atEOF bool) (advance int, token []byte, err error) {
+func scanCRLF(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	if atEOF && len(data) == 0 {
 		return 0, nil, nil
 	}
@@ -291,7 +329,7 @@ func (l *Listener) writePump(errChan *chan error) {
 				return
 			}
 			l.write(b)
-			
+
 		}
 	}
 }

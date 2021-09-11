@@ -6,19 +6,24 @@ import (
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
+
 type MarketStream struct {
-	listener      *Listener
-	log           *logrus.Logger
-	OutputChannel chan MarketBook
-	Cache         map[string]MarketCache
-	InitialClk    string
-	Clk           string
+
+	listener             *Listener
+	log                  *logrus.Logger
+
+	IncomingMarketData   chan MarketBook
+	SubscriptionResponse chan MarketSubscriptionResponse
+	
+	Cache                map[string]MarketCache
+	InitialClk           string
+	Clk                  string
 }
 
 func NewMarketStream(listener *Listener, log *logrus.Logger, marketUpdates *chan MarketBook) *MarketStream {
 	marketStream := new(MarketStream)
 	marketStream.log = log
-	marketStream.OutputChannel = *marketUpdates
+	marketStream.IncomingMarketData = *marketUpdates
 	marketStream.Cache = make(map[string]MarketCache)
 	return marketStream
 }
@@ -26,8 +31,8 @@ func NewMarketStream(listener *Listener, log *logrus.Logger, marketUpdates *chan
 func (ms *MarketStream) Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
 
 	request := new(models.MarketSubscriptionMessage)
-	request.SetID(ms.listener.uniqueID)
-	ms.listener.uniqueID++
+	request.SetID(ms.listener.uid)
+	ms.listener.uid++
 	request.MarketFilter = marketFilter
 	request.MarketDataFilter = marketDataFilter
 
@@ -80,11 +85,11 @@ func (ms *MarketStream) OnUpdate(changeMessage models.MarketChangeMessage) {
 
 		if marketCache, ok := ms.Cache[marketChange.ID]; ok {
 			marketCache.UpdateCache(&changeMessage, marketChange)
-			ms.OutputChannel <- marketCache.Snap()
+			ms.IncomingMarketData <- marketCache.Snap()
 		} else {
 			marketCache := CreateMarketCache(&changeMessage, marketChange)
 			ms.Cache[marketChange.ID] = *marketCache
-			ms.OutputChannel <- marketCache.Snap()
+			ms.IncomingMarketData <- marketCache.Snap()
 		}
 	}
 }

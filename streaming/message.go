@@ -7,8 +7,12 @@ import (
 
 )
 
-type MessageHandler struct{
+type MessageProcessor struct{
 	scanner bufio.Scanner
+}
+
+func addCRLF(data []byte) []byte {
+
 }
 
 // dropCR drops a terminal \r from the data.
@@ -35,21 +39,21 @@ func scanCRLF(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	return 0, nil, nil
 }
 
-func getOp() {
+func getOp(buf []byte) error{
 
 	// Unmarshal raw bytes to JSON
 	tmp := make(map[string]json.RawMessage)
 	var op string
-	err = json.Unmarshal(buf, &tmp)
+	err := json.Unmarshal(buf, &tmp)
 	if err != nil {
-		*errChan <- err
-		return
+		return err
 	}
 
 	// Peek to see the op code
 	err = json.Unmarshal(tmp["op"], &op)
 	if err != nil {
-		*errChan <- err
-		return
+		return err
 	}
+
+	return nil
 }

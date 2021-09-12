@@ -22,7 +22,15 @@ type StreamChannels struct {
 	Error                      chan error
 }
 
-func NewStreamChannels() *StreamChannels {
+type streamRequests struct {
+	
+}
+
+type StreamResponses struct {
+
+}
+
+func newStreamChannels() *StreamChannels {
 
 	channels := new(StreamChannels)
 
@@ -40,20 +48,12 @@ func NewStreamChannels() *StreamChannels {
 
 type Stream struct {
 
-	// Unique ID that must be assigned to a listener
-	uid          int32
-	connectionID string
-
 	channels *StreamChannels
+	session *Session
+	eventHandler *EventHandler
 
-	// Live/Testing Streaming API endpoint
-	endpoint string
-
-	// Logger instance for listener object
+	// Logger instance for Stream object
 	log *logrus.Logger
-
-	MarketStream IMarketStream
-	OrderStream  IOrderStream
 }
 
 // NewStreamClient blah blah
@@ -64,18 +64,15 @@ func NewStream(endpoint string, log *logrus.Logger, certs *tls.Certificate) (*St
 	}
 
 	stream := new(Stream)
-	stream.endpoint = endpoint
 	stream.log = log
 	stream.channels = NewStreamChannels()
-
-	stream.MarketStream = NewMarketStream(stream, stream.log, &stream.IncomingMarketData)
-	stream.OrderStream = NewOrderStream(stream, stream.log)
+	stream.eventHandler = NewEventHandler()
 
 	return stream, nil
 }
 
 // Start performs the Connection and Authentication steps and initializes the read/write goroutines
-func (stream *Stream) Start(errChan *chan error) error {
+func (stream *Stream) Start() error {
 
 	err := stream.connect()
 	if err != nil {
@@ -105,4 +102,19 @@ func (l *Stream) Stop() error {
 	}
 
 	return nil
+}
+
+func (stream *Stream) Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
+
+	marketSubscriptionRequest := &models.MarketSubscriptionMessage{MarketFilter: marketFilter, MarketDataFilter: marketDataFilter}
+	marketSubscriptionRequest.SetID(stream.uid)
+
+	stream.channels.MarketSubscriptionRequest <- *marketSubscriptionRequest
+
+	orderSubscriptionRequest := &models.OrderSubscriptionMessage{SegmentationEnabled: true}
+	orderSubscriptionRequest.SetID(stream.uid)
+
+	stream.channels.OrderSubscriptionRequest <- *orderSubscriptionRequest
+
+	stream.uid++
 }

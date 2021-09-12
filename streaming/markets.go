@@ -6,31 +6,32 @@ import (
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
-type MarketStreamHandler struct {
-	stream *Stream
-
+type MarketEventHandler struct {
+	stream     *Stream
 	Cache      map[string]MarketCache
 	InitialClk string
 	Clk        string
 }
 
-func NewMarketStream(client *Client) *MarketStreamHandler {
-	marketStream := new(MarketStreamHandler)
+func NewMarketHandler(stream *Stream) *MarketEventHandler {
+	marketStream := new(MarketEventHandler)
+	marketStream.stream = stream
 	marketStream.Cache = make(map[string]MarketCache)
 	return marketStream
 }
 
-func (ms *MarketStreamHandler) Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
+func (eh *MarketEventHandler) Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
 
 	request := new(models.MarketSubscriptionMessage)
-	request.SetID(ms.stream.uid)
-	ms.stream.uid++
+	request.SetID(eh.stream.uid)
+	eh.stream.uid++
 	request.MarketFilter = marketFilter
 	request.MarketDataFilter = marketDataFilter
 
-	ms.stream.channels.MarketSubscriptionRequest <- *request
+	eh.stream.channels.MarketSubscriptionRequest <- *request
 }
 
+// TODO: Move this to object method
 func getMarketIDs(mcm models.MarketChangeMessage) []string {
 	marketIDs := make([]string, 0)
 	for _, marketChange := range mcm.Mc {
@@ -39,7 +40,7 @@ func getMarketIDs(mcm models.MarketChangeMessage) []string {
 	return marketIDs
 }
 
-func (ms *MarketStreamHandler) OnSubscribe(changeMessage models.MarketChangeMessage) {
+func (ms *MarketEventHandler) OnSubscribe(changeMessage models.MarketChangeMessage) {
 
 	marketIDs := getMarketIDs(changeMessage)
 
@@ -54,18 +55,18 @@ func (ms *MarketStreamHandler) OnSubscribe(changeMessage models.MarketChangeMess
 	}
 }
 
-func (ms *MarketStreamHandler) OnResubscribe(changeMessage models.MarketChangeMessage) {
+func (ms *MarketEventHandler) OnResubscribe(changeMessage models.MarketChangeMessage) {
 	marketIDs := getMarketIDs(changeMessage)
 	ms.stream.log.WithFields(logrus.Fields{
 		"marketIDs": marketIDs,
 	}).Debug("Resubscribed to Betfair Market Changes")
 }
 
-func (ms *MarketStreamHandler) OnHeartbeat(changeMessage models.MarketChangeMessage) {
+func (ms *MarketEventHandler) OnHeartbeat(changeMessage models.MarketChangeMessage) {
 	ms.stream.log.Debug("Heartbeat")
 }
 
-func (ms *MarketStreamHandler) OnUpdate(changeMessage models.MarketChangeMessage) {
+func (ms *MarketEventHandler) OnUpdate(changeMessage models.MarketChangeMessage) {
 
 	if ms.InitialClk == "" {
 		ms.InitialClk = changeMessage.Clk

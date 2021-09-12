@@ -25,7 +25,7 @@ type Client struct {
 	Certificates *tls.Certificate
 	Betting      *Betting
 	Account      *Account
-	Streaming    *streaming.Streaming
+	Streaming    *streaming.Stream
 }
 
 func createURL(endpoint string, method string) string {
@@ -113,7 +113,7 @@ func NewClient(config *Config) (*Client, error) {
 	c.Account = &Account{Client: c}
 
 	// create streaming
-	c.Streaming = &streaming.Streaming{Client: c}
+	c.Streaming = &streaming.Stream{}
 
 	return c, nil
 }

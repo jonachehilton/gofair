@@ -2,8 +2,7 @@ package streaming
 
 const (
 	// Live
-	streamEndpoint = "stream-api.betfair.com:443"
-
+	StreamEndpoint = "stream-api.betfair.com:443"
 	// Testing
-	streamIntegrationEndpoint = "stream-api-integration.betfair.com:443"
+	StreamIntegrationEndpoint = "stream-api-integration.betfair.com:443"
 )

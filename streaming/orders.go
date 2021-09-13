@@ -18,8 +18,8 @@ func NewOrderHandler(stream *Stream) *OrderHandler {
 	return orderStream
 }
 
-func (order *OrderHandler) Subscribe(orderSubscription models.OrderSubscriptionMessage) {
-	order.stream.channels.OrderSubscriptionRequest <- orderSubscription
+func (orderHandler *OrderHandler) Subscribe(orderSubscription models.OrderSubscriptionMessage) {
+	orderHandler.stream.Channels.orderSubscriptionRequest <- orderSubscription
 }
 
 func (orderHandler *OrderHandler) OnSubscribe(orderChangeMessage models.OrderChangeMessage) {

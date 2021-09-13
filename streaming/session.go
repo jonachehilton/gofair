@@ -12,17 +12,12 @@ const (
 	failure = "FAILURE"
 )
 
-type channels struct {
-	err  chan error
-	stop chan int
-}
-
 type Session struct {
 	conn         *TLSConnection
-	appKey       string
-	sessionToken string
 	scanner      *bufio.Scanner
-	channels     channels
+	eventHandler *EventHandler
+	stop         chan int
+	channels     *StreamChannels
 }
 
 func NewSession(destination string, certs *tls.Certificate, appKey string, sessionToken string) (*Session, error) {
@@ -34,8 +29,21 @@ func NewSession(destination string, certs *tls.Certificate, appKey string, sessi
 
 	session.conn = conn
 	err = session.authenticate(appKey, sessionToken)
+	if err != nil {
+		return nil, err
+	}
+
+	go session.readPump()
+	go session.writePump()
 
 	return session, nil
+}
+
+func (session *Session) Stop() {
+	// Stop the readPump/writePump goroutines
+	session.stop <- 1
+	// Terminate TLS connection to stream endpoint
+	session.conn.Stop()
 }
 
 func (session *Session) authenticate(appKey string, sessionToken string) error {
@@ -77,7 +85,7 @@ func (session *Session) authenticate(appKey string, sessionToken string) error {
 
 func (session *Session) write(b []byte) (int, error) {
 	// Every message is in json & terminated with a line feed (CRLF)
-	b = append(b, []byte{'\r', '\n'}...)
+	b = addCRLF(b)
 	return session.conn.Write(b)
 }
 
@@ -96,22 +104,31 @@ func (session *Session) readPump() {
 
 	if session.conn == nil {
 		err := new(NoConnectionError)
-		session.channels.err <- err
+		session.channels.Err <- err
 		return
 	}
 
 	for {
 		select {
-		case <-session.channels.stop:
+
+		case <-session.stop:
 			return
+
 		default:
 			buf, err := session.read()
+
 			if err != nil {
-				session.channels.err <- err
+				session.channels.Err <- err
 				return
 			}
 
-			stream.onData(op, buf)
+			op, err := getOp(buf)
+			if err != nil {
+				session.channels.Err <- err
+				return
+			}
+
+			session.eventHandler.onData(op, buf)
 		}
 	}
 }
@@ -120,23 +137,23 @@ func (session *Session) writePump() {
 	for {
 		select {
 
-		case <-session.channels.stop:
+		case <-session.stop:
 			return
 
-		case marketSubscriptionMessage := <-session.marketSubscriptionRequest:
+		case marketSubscriptionMessage := <-session.channels.marketSubscriptionRequest:
 			b, err := marketSubscriptionMessage.MarshalJSON()
 			if err != nil {
-				session.channels.err <- err
+				session.channels.Err <- err
 				return
 			}
 
 			session.write(b)
 
-		case orderSubscriptionMessage := <-session.orderSubscriptionRequest:
+		case orderSubscriptionMessage := <-session.channels.orderSubscriptionRequest:
 
 			b, err := orderSubscriptionMessage.MarshalJSON()
 			if err != nil {
-				session.channels.err <- err
+				session.channels.Err <- err
 				return
 			}
 

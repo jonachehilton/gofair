@@ -12,7 +12,7 @@ type MessageProcessor struct{
 }
 
 func addCRLF(data []byte) []byte {
-
+	return append(data, []byte{'\r', '\n'}...)
 }
 
 // dropCR drops a terminal \r from the data.
@@ -39,21 +39,21 @@ func scanCRLF(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	return 0, nil, nil
 }
 
-func getOp(buf []byte) error{
+func getOp(buf []byte) (string, error) {
 
 	// Unmarshal raw bytes to JSON
 	tmp := make(map[string]json.RawMessage)
 	var op string
 	err := json.Unmarshal(buf, &tmp)
 	if err != nil {
-		return err
+		return op, err
 	}
 
 	// Peek to see the op code
 	err = json.Unmarshal(tmp["op"], &op)
 	if err != nil {
-		return err
+		return op, err
 	}
 
-	return nil
+	return op, nil
 }

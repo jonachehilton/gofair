@@ -12,8 +12,12 @@ type TLSConnection struct {
 	conn *tls.Conn
 }
 
-func (conn *TLSConnection) Write(b []byte) (int, error){
+func (conn *TLSConnection) Write(b []byte) (int, error) {
 	return conn.conn.Write(b)
+}
+
+func (conn *TLSConnection) Stop() {
+	conn.conn.Close()
 }
 
 func NewTLSConnection(destination string, certs *tls.Certificate) (*TLSConnection, error) {

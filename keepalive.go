@@ -5,24 +5,24 @@ import (
 	"time"
 )
 
-type keepAliveResult struct {
+type KeepAliveResult struct {
 	SessionToken string `json:"sessionToken"`
 	Token        string `json:"token"`
 	Status       string `json:"status"`
 	Error        string `json:"error"`
 }
 
-func (c *Client) KeepAlive() (keepAliveResult, error) {
+func (c *Client) KeepAlive() (KeepAliveResult, error) {
 	// build url
 	url := createURL(Endpoints.Identity, "keepAlive")
 
 	// make request
 	resp, err := logoutRequest(c, url)
 	if err != nil {
-		return *new(keepAliveResult), err
+		return *new(KeepAliveResult), err
 	}
 
-	var result keepAliveResult
+	var result KeepAliveResult
 
 	// parse json
 	err = json.Unmarshal(resp, &result)

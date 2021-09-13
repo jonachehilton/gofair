@@ -6,9 +6,7 @@ var Endpoints = struct {
 	Identity,
 	Betting,
 	Account,
-	Navigation,
-	Stream,
-	StreamIntegration string
+	Navigation string
 }{
 	Login:             "https://identitysso-api.betfair.com/api/",
 	Identity:          "https://identitysso.betfair.com/api/",

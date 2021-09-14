@@ -20,12 +20,6 @@ type StreamChannels struct {
 	Err                        chan error
 }
 
-type streamRequests struct {
-}
-
-type StreamResponses struct {
-}
-
 func newStreamChannels() *StreamChannels {
 
 	channels := new(StreamChannels)
@@ -43,14 +37,14 @@ func newStreamChannels() *StreamChannels {
 }
 
 type Stream struct {
-	endpoint string
-	certs    *tls.Certificate
-	Channels *StreamChannels
-	session  *Session
+	requestUID int32
+	endpoint   string
+	Channels   *StreamChannels
+	session    *Session
 }
 
 // NewStreamClient blah blah
-func NewStream(endpoint string, certs *tls.Certificate) (*Stream, error) {
+func NewStream(endpoint string) (*Stream, error) {
 
 	if endpoint != StreamEndpoint && endpoint != StreamIntegrationEndpoint {
 		return nil, &EndpointError{}
@@ -58,16 +52,20 @@ func NewStream(endpoint string, certs *tls.Certificate) (*Stream, error) {
 
 	stream := new(Stream)
 	stream.endpoint = endpoint
-	stream.certs = certs
 	stream.Channels = newStreamChannels()
 
 	return stream, nil
 }
 
 // Start performs the Connection and Authentication steps and initializes the read/write goroutines
-func (stream *Stream) Start() error {
+func (stream *Stream) Start(certs *tls.Certificate, appKey string, sessionToken string) error {
 
-	session, err := NewSession(stream.endpoint, stream.certs)
+	session, err := NewSession(stream.endpoint, certs, appKey, sessionToken)
+	if err != nil {
+		return err
+	}
+
+	stream.session = session
 
 	return nil
 }
@@ -77,17 +75,15 @@ func (stream *Stream) Stop() {
 	stream.session.Stop()
 }
 
-func (stream *Stream) Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
+func (stream *Stream) SubscribeToMarkets(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
 
-	marketSubscriptionRequest := &models.MarketSubscriptionMessage{MarketFilter: marketFilter, MarketDataFilter: marketDataFilter}
-	marketSubscriptionRequest.SetID(stream.uid)
+	request := models.MarketSubscriptionMessage{MarketFilter: marketFilter, MarketDataFilter: marketDataFilter}
+	request.SetID(stream.requestUID)
+	stream.Channels.marketSubscriptionRequest <- request
+}
 
-	stream.Channels.marketSubscriptionRequest <- *marketSubscriptionRequest
-
-	orderSubscriptionRequest := &models.OrderSubscriptionMessage{SegmentationEnabled: true}
-	stream.session.eventHandler.Orders.Subscribe()
-
-	stream.Channels.orderSubscriptionRequest <- *orderSubscriptionRequest
-
-	stream.uid++
+func (stream *Stream) SubscribeToOrders() {
+	request := models.OrderSubscriptionMessage{SegmentationEnabled: true}
+	request.SetID(stream.requestUID)
+	stream.Channels.orderSubscriptionRequest <- request
 }

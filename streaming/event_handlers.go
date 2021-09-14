@@ -5,7 +5,6 @@ import (
 )
 
 type IMarketHandler interface {
-	Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter)
 	OnSubscribe(ChangeMessage models.MarketChangeMessage)
 	OnResubscribe(ChangeMessage models.MarketChangeMessage)
 	OnHeartbeat(ChangeMessage models.MarketChangeMessage)

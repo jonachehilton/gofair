@@ -33,6 +33,9 @@ func NewSession(destination string, certs *tls.Certificate, appKey string, sessi
 		return nil, err
 	}
 
+	session.scanner = bufio.NewScanner(session.conn.conn)
+	session.scanner.Split(scanCRLF)
+
 	go session.readPump()
 	go session.writePump()
 

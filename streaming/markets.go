@@ -5,7 +5,6 @@ import (
 )
 
 type MarketEventHandler struct {
-	counter    int32
 	channels   *StreamChannels
 	cache      map[string]MarketCache
 	initialClk string
@@ -17,15 +16,6 @@ func NewMarketHandler(channels *StreamChannels) *MarketEventHandler {
 	marketStream.channels = channels
 	marketStream.cache = make(map[string]MarketCache)
 	return marketStream
-}
-
-func (eh *MarketEventHandler) Subscribe(marketFilter *models.MarketFilter, marketDataFilter *models.MarketDataFilter) {
-
-	request := models.MarketSubscriptionMessage{MarketFilter: marketFilter, MarketDataFilter: marketDataFilter}
-	request.SetID(eh.counter)
-	eh.counter++
-
-	eh.channels.marketSubscriptionRequest <- request
 }
 
 func (ms *MarketEventHandler) OnSubscribe(changeMessage models.MarketChangeMessage) {

@@ -1,15 +1,10 @@
 package streaming
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 
 )
-
-type MessageProcessor struct{
-	scanner bufio.Scanner
-}
 
 func addCRLF(data []byte) []byte {
 	return append(data, []byte{'\r', '\n'}...)

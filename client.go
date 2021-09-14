@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/belmegatron/gofair/streaming"
+	"github.com/belmegatron/gofair/common"
 
 )
 
@@ -20,7 +21,7 @@ type Session struct {
 
 // Client object
 type Client struct {
-	Config       *Config
+	Config       *common.Config
 	Session      *Session
 	Certificates *tls.Certificate
 	Betting      *Betting
@@ -79,28 +80,17 @@ func (c *Client) request(url string, params interface{}, v interface{}) error {
 	return nil
 }
 
-
 // NewClient creates a new Betfair client.
-func NewClient(config *Config) (*Client, error) {
+func NewClient(config *common.Config) (*Client, error) {
 
 	c := new(Client)
 	c.Session = new(Session)
 
-	var cert tls.Certificate
-	var err error
-	// create certificates
-	// ----- is obviously not a path, therefore load direct from the variables
-	if strings.HasPrefix(config.CertFile, "------") {
-		cert, err = tls.X509KeyPair([]byte(config.CertFile), []byte(config.KeyFile))
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		cert, err = tls.LoadX509KeyPair(config.CertFile, config.KeyFile)
-		if err != nil {
-			return nil, err
-		}
+	cert, err := tls.LoadX509KeyPair(config.CertFile, config.KeyFile)
+	if err != nil {
+		return nil, err
 	}
+
 	c.Certificates = &cert
 
 	// set config

@@ -36,6 +36,13 @@ type EventHandler struct {
 	Orders IOrderHandler
 }
 
+func NewEventHandler(channels *StreamChannels) *EventHandler {
+	handler := new(EventHandler)
+	handler.Markets = NewMarketHandler(channels)
+	handler.Orders = NewOrderHandler(channels)
+	return handler
+}
+
 // onData passes a blob to the appropriate event handler based on the op code
 func (eh *EventHandler) onData(op string, data []byte) {
 

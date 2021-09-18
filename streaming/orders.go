@@ -6,15 +6,15 @@ import (
 
 type OrderHandler struct {
 	cache      OrderCache
-	stream     *Stream
+	channels   *StreamChannels
 	InitialClk string
 	Clk        string
 }
 
-func NewOrderHandler(stream *Stream) *OrderHandler {
+func NewOrderHandler(channels *StreamChannels) *OrderHandler {
 	orderStream := new(OrderHandler)
 	orderStream.cache = make(OrderCache)
-	orderStream.stream = stream
+	orderStream.channels = channels
 	return orderStream
 }
 

@@ -14,10 +14,10 @@ const (
 
 type Session struct {
 	conn         *TLSConnection
-	scanner      *bufio.Scanner
-	eventHandler *EventHandler
-	stop         chan int
 	channels     *StreamChannels
+	eventHandler *EventHandler
+	scanner      *bufio.Scanner
+	stop         chan int
 }
 
 func NewSession(destination string, certs *tls.Certificate, appKey string, sessionToken string, channels *StreamChannels) (*Session, error) {
@@ -35,6 +35,8 @@ func NewSession(destination string, certs *tls.Certificate, appKey string, sessi
 
 	// Pass a pointer to our StreamChannels struct which are used for piping data back to the main goroutine
 	session.channels = channels
+	session.eventHandler = NewEventHandler(channels)
+	session.stop = make(chan int)
 
 	err = session.authenticate(appKey, sessionToken)
 	if err != nil {

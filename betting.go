@@ -46,7 +46,7 @@ func (b *Betting) ListEventTypes(filter MarketFilter) ([]EventTypeResult, error)
 
 	var response []EventTypeResult
 
-	err := b.bettingRequest(listEventTypes, params, response)
+	err := b.bettingRequest(listEventTypes, params, &response)
 
 	return response, err
 }
@@ -62,7 +62,7 @@ func (b *Betting) ListCompetitions(filter MarketFilter) ([]CompetitionResult, er
 
 	var response []CompetitionResult
 
-	err := b.bettingRequest(listCompetitions, params, response)
+	err := b.bettingRequest(listCompetitions, params, &response)
 
 	return response, err
 }
@@ -80,7 +80,7 @@ func (b *Betting) ListTimeRanges(filter MarketFilter, granularity string) ([]Tim
 
 	var response []TimeRangeResult
 
-	err := b.bettingRequest(listTimeRanges, params, response)
+	err := b.bettingRequest(listTimeRanges, params, &response)
 
 	return response, err
 }
@@ -96,7 +96,7 @@ func (b *Betting) ListEvents(filter MarketFilter) ([]EventResult, error) {
 
 	var response []EventResult
 
-	err := b.bettingRequest(listEvents, params, response)
+	err := b.bettingRequest(listEvents, params, &response)
 
 	return response, err
 }
@@ -112,7 +112,7 @@ func (b *Betting) ListMarketTypes(filter MarketFilter) ([]MarketTypeResult, erro
 
 	var response []MarketTypeResult
 
-	err := b.bettingRequest(listMarketTypes, params, response)
+	err := b.bettingRequest(listMarketTypes, params, &response)
 
 	return response, err
 }
@@ -128,7 +128,7 @@ func (b *Betting) ListCountries(filter MarketFilter) ([]CountryResult, error) {
 
 	var response []CountryResult
 
-	err := b.bettingRequest(listCountries, params, response)
+	err := b.bettingRequest(listCountries, params, &response)
 
 	return response, err
 }
@@ -144,7 +144,7 @@ func (b *Betting) ListVenues(filter MarketFilter) ([]VenueResult, error) {
 
 	var response []VenueResult
 
-	err := b.bettingRequest(listVenues, params, response)
+	err := b.bettingRequest(listVenues, params, &response)
 
 	return response, err
 }
@@ -166,7 +166,7 @@ func (b *Betting) ListMarketCatalogue(filter MarketFilter, marketProjection []st
 
 	var response []MarketCatalogue
 
-	err := b.bettingRequest(listMarketCatalogue, params, response)
+	err := b.bettingRequest(listMarketCatalogue, params, &response)
 
 	return response, err
 }
@@ -199,7 +199,7 @@ func (b *Betting) ListMarketBook(marketIDs []string, displayOrders bool) ([]Mark
 
 	var response []MarketBook
 
-	err := b.bettingRequest(listMarketBook, params, response)
+	err := b.bettingRequest(listMarketBook, params, &response)
 
 	return response, err
 }
@@ -215,7 +215,7 @@ func (b *Betting) ListMarketProfitAndLoss(marketIDs []string) ([]MarketProfitAnd
 
 	var response []MarketProfitAndLoss
 
-	err := b.bettingRequest(listMarketProfitAndLoss, params, response)
+	err := b.bettingRequest(listMarketProfitAndLoss, params, &response)
 
 	return response, err
 }
@@ -233,7 +233,7 @@ func (b *Betting) PlaceOrders(marketID string, placeInstructions []PlaceInstruct
 
 	var response PlaceExecutionReport
 
-	err := b.bettingRequest(placeOrders, params, response)
+	err := b.bettingRequest(placeOrders, params, &response)
 
 	return response, err
 }
@@ -251,7 +251,7 @@ func (b *Betting) CancelOrders(marketID string, cancelInstructions []CancelInstr
 
 	var response CancelExecutionReport
 
-	err := b.bettingRequest(cancelOrders, params, response)
+	err := b.bettingRequest(cancelOrders, params, &response)
 
 	return response, err
 }
@@ -270,7 +270,7 @@ func (b *Betting) ListCurrentOrders(betIDs []string, marketIDs []string, orderPr
 
 	var response CurrentOrderSummaryReport
 
-	err := b.bettingRequest(listCurrentOrders, params, response)
+	err := b.bettingRequest(listCurrentOrders, params, &response)
 
 	return response, err
 }

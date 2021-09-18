@@ -18,20 +18,20 @@ func NewMarketHandler(channels *StreamChannels) *MarketEventHandler {
 	return marketStream
 }
 
-func (ms *MarketEventHandler) OnSubscribe(changeMessage models.MarketChangeMessage) {
+func (handler *MarketEventHandler) OnSubscribe(changeMessage models.MarketChangeMessage) {
 
 	response := new(MarketSubscriptionResponse)
 
 	for _, marketChange := range changeMessage.Mc {
 		marketCache := CreateMarketCache(&changeMessage, marketChange)
-		ms.cache[marketChange.ID] = *marketCache
+		handler.cache[marketChange.ID] = *marketCache
 		response.SubscribedMarketIDs = append(response.SubscribedMarketIDs, marketChange.ID)
 	}
 
-	ms.channels.MarketSubscriptionResponse <- *response
+	handler.channels.MarketSubscriptionResponse <- *response
 }
 
-func (ms *MarketEventHandler) OnResubscribe(changeMessage models.MarketChangeMessage) {
+func (handler *MarketEventHandler) OnResubscribe(changeMessage models.MarketChangeMessage) {
 
 	response := new(MarketSubscriptionResponse)
 
@@ -39,29 +39,29 @@ func (ms *MarketEventHandler) OnResubscribe(changeMessage models.MarketChangeMes
 		response.SubscribedMarketIDs = append(response.SubscribedMarketIDs, marketChange.ID)
 	}
 
-	ms.channels.MarketSubscriptionResponse <- *response
+	handler.channels.MarketSubscriptionResponse <- *response
 }
 
-func (ms *MarketEventHandler) OnHeartbeat(changeMessage models.MarketChangeMessage) {
+func (handler *MarketEventHandler) OnHeartbeat(changeMessage models.MarketChangeMessage) {
 }
 
-func (ms *MarketEventHandler) OnUpdate(changeMessage models.MarketChangeMessage) {
+func (handler *MarketEventHandler) OnUpdate(changeMessage models.MarketChangeMessage) {
 
-	if ms.initialClk == "" {
-		ms.initialClk = changeMessage.Clk
+	if handler.initialClk == "" {
+		handler.initialClk = changeMessage.Clk
 	}
 
-	ms.clk = changeMessage.Clk
+	handler.clk = changeMessage.Clk
 
 	for _, marketChange := range changeMessage.Mc {
 
-		if marketCache, ok := ms.cache[marketChange.ID]; ok {
+		if marketCache, ok := handler.cache[marketChange.ID]; ok {
 			marketCache.UpdateCache(&changeMessage, marketChange)
-			ms.channels.MarketUpdate <- marketCache.Snap()
+			handler.channels.MarketUpdate <- marketCache.Snap()
 		} else {
 			marketCache := CreateMarketCache(&changeMessage, marketChange)
-			ms.cache[marketChange.ID] = *marketCache
-			ms.channels.MarketUpdate <- marketCache.Snap()
+			handler.cache[marketChange.ID] = *marketCache
+			handler.channels.MarketUpdate <- marketCache.Snap()
 		}
 	}
 }

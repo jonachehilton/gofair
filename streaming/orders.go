@@ -18,11 +18,11 @@ func NewOrderHandler(stream *Stream) *OrderHandler {
 	return orderStream
 }
 
-func (orderHandler *OrderHandler) OnSubscribe(orderChangeMessage models.OrderChangeMessage) {
+func (handler *OrderHandler) OnSubscribe(orderChangeMessage models.OrderChangeMessage) {
 
 }
 
-func (orderHandler *OrderHandler) OnResubscribe(orderChangeMessage models.OrderChangeMessage) {
+func (handler *OrderHandler) OnResubscribe(orderChangeMessage models.OrderChangeMessage) {
 
 }
 
@@ -30,28 +30,28 @@ func (orderHandler *OrderHandler) OnHeartbeat(orderChangeMessage models.OrderCha
 
 }
 
-func (orderHandler *OrderHandler) OnUpdate(orderChangeMessage models.OrderChangeMessage) {
+func (handler *OrderHandler) OnUpdate(orderChangeMessage models.OrderChangeMessage) {
 
-	if orderHandler.InitialClk == "" {
-		orderHandler.InitialClk = orderChangeMessage.Clk
+	if handler.InitialClk == "" {
+		handler.InitialClk = orderChangeMessage.Clk
 	}
 
-	orderHandler.Clk = orderChangeMessage.Clk
+	handler.Clk = orderChangeMessage.Clk
 
 	for _, orderMarketChange := range orderChangeMessage.Oc {
 
 		// Check if a cache for the given Market ID exists
-		_, found := orderHandler.cache[orderMarketChange.ID]
+		_, found := handler.cache[orderMarketChange.ID]
 		if !found {
-			orderHandler.cache[orderMarketChange.ID] = MarketOrderCache{MarketID: orderMarketChange.ID}
+			handler.cache[orderMarketChange.ID] = MarketOrderCache{MarketID: orderMarketChange.ID}
 		}
 
 		// Check if a cache for the given MarketID/RunnerID combination exists
 		for _, orderRunnerChange := range orderMarketChange.Orc {
 
-			_, found = orderHandler.cache[orderMarketChange.ID].RunnerOrders[int(orderRunnerChange.ID)]
+			_, found = handler.cache[orderMarketChange.ID].RunnerOrders[int(orderRunnerChange.ID)]
 			if !found {
-				orderHandler.cache[orderMarketChange.ID].RunnerOrders[int(orderRunnerChange.ID)] = RunnerOrderCache{}
+				handler.cache[orderMarketChange.ID].RunnerOrders[int(orderRunnerChange.ID)] = RunnerOrderCache{}
 			}
 
 			// TODO: Update Cache

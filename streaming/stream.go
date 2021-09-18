@@ -40,14 +40,13 @@ type Stream struct {
 	endpoint     string
 	certs        *tls.Certificate
 	appKey       string
-	sessionToken string
 
 	Channels *StreamChannels
 	session  *Session
 }
 
-// NewStreamClient blah blah
-func NewStream(endpoint string, certs *tls.Certificate, appKey string, sessionToken string) (*Stream, error) {
+// NewStream generates a Stream object which can be subsequently used to connect to an Exchange Stream endpoint
+func NewStream(endpoint string, certs *tls.Certificate, appKey string) (*Stream, error) {
 
 	if endpoint != LiveEndpoint && endpoint != IntegrationEndpoint {
 		return nil, &EndpointError{}
@@ -57,16 +56,15 @@ func NewStream(endpoint string, certs *tls.Certificate, appKey string, sessionTo
 	stream.endpoint = endpoint
 	stream.certs = certs
 	stream.appKey = appKey
-	stream.sessionToken = sessionToken
 	stream.Channels = newStreamChannels()
 
 	return stream, nil
 }
 
 // Start performs the Connection and Authentication steps and initializes the read/write goroutines
-func (stream *Stream) Start() error {
+func (stream *Stream) Start(sessionToken string) error {
 
-	session, err := NewSession(stream.endpoint, stream.certs, stream.appKey, stream.sessionToken)
+	session, err := NewSession(stream.endpoint, stream.certs, stream.appKey, sessionToken, stream.Channels)
 	if err != nil {
 		return err
 	}
@@ -85,11 +83,13 @@ func (stream *Stream) SubscribeToMarkets(marketFilter *models.MarketFilter, mark
 
 	request := models.MarketSubscriptionMessage{MarketFilter: marketFilter, MarketDataFilter: marketDataFilter}
 	request.SetID(stream.requestUID)
+	stream.requestUID++
 	stream.Channels.marketSubscriptionRequest <- request
 }
 
 func (stream *Stream) SubscribeToOrders() {
 	request := models.OrderSubscriptionMessage{SegmentationEnabled: true}
 	request.SetID(stream.requestUID)
+	stream.requestUID++
 	stream.Channels.orderSubscriptionRequest <- request
 }

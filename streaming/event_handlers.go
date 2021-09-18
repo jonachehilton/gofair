@@ -4,6 +4,19 @@ import (
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
+const (
+	// Ops
+	connection = "connection"
+	status = "status"
+	marketChangeMessage = "mcm"
+	orderChangeMessage = "ocm"
+
+	// Change types
+	subscribe = "SUB_IMAGE"
+	resubscribe = "RESUB_DELTA"
+	heartbeat = "HEARTBEAT"
+)
+
 type IMarketHandler interface {
 	OnSubscribe(ChangeMessage models.MarketChangeMessage)
 	OnResubscribe(ChangeMessage models.MarketChangeMessage)
@@ -23,21 +36,17 @@ type EventHandler struct {
 	Orders IOrderHandler
 }
 
-func NewEventHandler() *EventHandler {
-	eh := new(EventHandler)
-	return eh
-}
-
+// onData passes a blob to the appropriate event handler based on the op code
 func (eh *EventHandler) onData(op string, data []byte) {
 
 	switch op {
-	case "connection":
+	case connection:
 		eh.onConnection(data)
-	case "status":
+	case status:
 		eh.onStatus(data)
-	case "mcm":
+	case marketChangeMessage:
 		eh.onMarketChangeMessage(data)
-	case "ocm":
+	case orderChangeMessage:
 		eh.onOrderChangeMessage(data)
 	}
 }
@@ -48,6 +57,7 @@ func (stream *EventHandler) onConnection(data []byte) {
 func (stream *EventHandler) onStatus(data []byte) {
 }
 
+// onMarketChangeMessage passes a MarketChange blob to the appropriate event handler based on the Change type
 func (eh *EventHandler) onMarketChangeMessage(data []byte) {
 
 	marketChangeMessage := new(models.MarketChangeMessage)
@@ -58,17 +68,18 @@ func (eh *EventHandler) onMarketChangeMessage(data []byte) {
 	}
 
 	switch marketChangeMessage.Ct {
-	case "SUB_IMAGE":
+	case subscribe:
 		eh.Markets.OnSubscribe(*marketChangeMessage)
-	case "RESUB_DELTA":
+	case resubscribe:
 		eh.Markets.OnResubscribe(*marketChangeMessage)
-	case "HEARTBEAT":
+	case heartbeat:
 		eh.Markets.OnHeartbeat(*marketChangeMessage)
 	default:
 		eh.Markets.OnUpdate(*marketChangeMessage)
 	}
 }
 
+// onOrderChangeMessage passes an OrderChange blob to the appropriate event handler based on the Change type
 func (eh *EventHandler) onOrderChangeMessage(data []byte) {
 
 	orderChangeMessage := new(models.OrderChangeMessage)
@@ -79,11 +90,11 @@ func (eh *EventHandler) onOrderChangeMessage(data []byte) {
 	}
 
 	switch orderChangeMessage.Ct {
-	case "SUB_IMAGE":
+	case subscribe:
 		eh.Orders.OnSubscribe(*orderChangeMessage)
-	case "RESUB_DELTA":
+	case resubscribe:
 		eh.Orders.OnResubscribe(*orderChangeMessage)
-	case "HEARTBEAT":
+	case heartbeat:
 		eh.Orders.OnHeartbeat(*orderChangeMessage)
 	default:
 		eh.Orders.OnUpdate(*orderChangeMessage)

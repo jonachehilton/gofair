@@ -20,21 +20,26 @@ type Session struct {
 	channels     *StreamChannels
 }
 
-func NewSession(destination string, certs *tls.Certificate, appKey string, sessionToken string) (*Session, error) {
+func NewSession(destination string, certs *tls.Certificate, appKey string, sessionToken string, channels *StreamChannels) (*Session, error) {
 	session := new(Session)
-	conn, err := NewTLSConnection(destination, certs)
+	TLSConnection, err := NewTLSConnection(destination, certs)
 	if err != nil {
 		return nil, err
 	}
 
-	session.conn = conn
+	session.conn = TLSConnection
+
+	// Wrap the underlying connection with our byte scanner, this will read in bytes until a CRLF is encountered
+	session.scanner = bufio.NewScanner(TLSConnection.conn)
+	session.scanner.Split(scanCRLF)
+
+	// Pass a pointer to our StreamChannels struct which are used for piping data back to the main goroutine
+	session.channels = channels
+
 	err = session.authenticate(appKey, sessionToken)
 	if err != nil {
 		return nil, err
 	}
-
-	session.scanner = bufio.NewScanner(session.conn.conn)
-	session.scanner.Split(scanCRLF)
 
 	go session.readPump()
 	go session.writePump()

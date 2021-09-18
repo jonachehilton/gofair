@@ -18,6 +18,7 @@ func (conn *TLSConnection) Write(b []byte) (int, error) {
 
 func (conn *TLSConnection) Stop() {
 	conn.conn.Close()
+	conn.conn = nil
 }
 
 func NewTLSConnection(destination string, certs *tls.Certificate) (*TLSConnection, error) {

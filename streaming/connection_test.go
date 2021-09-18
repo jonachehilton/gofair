@@ -6,17 +6,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/belmegatron/gofair/common"
+	"github.com/belmegatron/gofair/config"
 )
 
 func TestTLSConnection(t *testing.T) {
 
 	// Arrange
-	config, _ := common.LoadConfig("../config.json")
-	cert, _ := tls.LoadX509KeyPair(config.CertFile, config.KeyFile)
+	cfg, _ := config.LoadConfig("../config.json")
+	cert, _ := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
 	
 	// Act
-	conn, _ := NewTLSConnection(StreamIntegrationEndpoint, &cert)
+	conn, _ := NewTLSConnection(IntegrationEndpoint, &cert)
 
 	// Assert
 	assert.NotNil(t, conn)

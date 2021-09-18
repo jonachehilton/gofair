@@ -20,13 +20,26 @@ func NewMarketHandler(channels *StreamChannels) *MarketEventHandler {
 
 func (ms *MarketEventHandler) OnSubscribe(changeMessage models.MarketChangeMessage) {
 
+	response := new(MarketSubscriptionResponse)
+
 	for _, marketChange := range changeMessage.Mc {
 		marketCache := CreateMarketCache(&changeMessage, marketChange)
 		ms.cache[marketChange.ID] = *marketCache
+		response.SubscribedMarketIDs = append(response.SubscribedMarketIDs, marketChange.ID)
 	}
+
+	ms.channels.MarketSubscriptionResponse <- *response
 }
 
 func (ms *MarketEventHandler) OnResubscribe(changeMessage models.MarketChangeMessage) {
+
+	response := new(MarketSubscriptionResponse)
+
+	for _, marketChange := range changeMessage.Mc {
+		response.SubscribedMarketIDs = append(response.SubscribedMarketIDs, marketChange.ID)
+	}
+
+	ms.channels.MarketSubscriptionResponse <- *response
 }
 
 func (ms *MarketEventHandler) OnHeartbeat(changeMessage models.MarketChangeMessage) {

@@ -10,7 +10,7 @@ import (
 	"net/http"
 
 	"github.com/belmegatron/gofair/streaming"
-	"github.com/belmegatron/gofair/common"
+	"github.com/belmegatron/gofair/config"
 
 )
 
@@ -21,7 +21,7 @@ type Session struct {
 
 // Client object
 type Client struct {
-	Config       *common.Config
+	Config       *config.Config
 	Session      *Session
 	Certificates *tls.Certificate
 	Betting      *Betting
@@ -81,12 +81,12 @@ func (c *Client) request(url string, params interface{}, v interface{}) error {
 }
 
 // NewClient creates a new Betfair client.
-func NewClient(config *common.Config) (*Client, error) {
+func NewClient(cfg *config.Config) (*Client, error) {
 
 	c := new(Client)
 	c.Session = new(Session)
 
-	cert, err := tls.LoadX509KeyPair(config.CertFile, config.KeyFile)
+	cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func NewClient(config *common.Config) (*Client, error) {
 	c.Certificates = &cert
 
 	// set config
-	c.Config = config
+	c.Config = cfg
 
 	// create betting
 	c.Betting = &Betting{Client: c}

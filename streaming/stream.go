@@ -13,7 +13,6 @@ type StreamChannels struct {
 
 	// Incoming Responses
 	MarketUpdate chan MarketBook
-
 	// TODO: Fix this
 	OrderUpdate                chan interface{}
 	MarketSubscriptionResponse chan MarketSubscriptionResponse
@@ -37,30 +36,37 @@ func newStreamChannels() *StreamChannels {
 }
 
 type Stream struct {
-	requestUID int32
-	endpoint   string
-	Channels   *StreamChannels
-	session    *Session
+	requestUID   int32
+	endpoint     string
+	certs        *tls.Certificate
+	appKey       string
+	sessionToken string
+
+	Channels *StreamChannels
+	session  *Session
 }
 
 // NewStreamClient blah blah
-func NewStream(endpoint string) (*Stream, error) {
+func NewStream(endpoint string, certs *tls.Certificate, appKey string, sessionToken string) (*Stream, error) {
 
-	if endpoint != StreamEndpoint && endpoint != StreamIntegrationEndpoint {
+	if endpoint != LiveEndpoint && endpoint != IntegrationEndpoint {
 		return nil, &EndpointError{}
 	}
 
 	stream := new(Stream)
 	stream.endpoint = endpoint
+	stream.certs = certs
+	stream.appKey = appKey
+	stream.sessionToken = sessionToken
 	stream.Channels = newStreamChannels()
 
 	return stream, nil
 }
 
 // Start performs the Connection and Authentication steps and initializes the read/write goroutines
-func (stream *Stream) Start(certs *tls.Certificate, appKey string, sessionToken string) error {
+func (stream *Stream) Start() error {
 
-	session, err := NewSession(stream.endpoint, certs, appKey, sessionToken)
+	session, err := NewSession(stream.endpoint, stream.certs, stream.appKey, stream.sessionToken)
 	if err != nil {
 		return err
 	}

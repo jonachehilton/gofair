@@ -81,31 +81,36 @@ func (c *Client) request(url string, params interface{}, v interface{}) error {
 }
 
 // NewClient creates a new Betfair client.
-func NewClient(cfg *config.Config) (*Client, error) {
+func NewClient(cfg *config.Config, streamingEndpoint string) (*Client, error) {
 
-	c := new(Client)
-	c.Session = new(Session)
+	client := new(Client)
+	client.Session = new(Session)
 
 	cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
 	if err != nil {
 		return nil, err
 	}
 
-	c.Certificates = &cert
+	client.Certificates = &cert
 
 	// set config
-	c.Config = cfg
+	client.Config = cfg
 
 	// create betting
-	c.Betting = &Betting{Client: c}
+	client.Betting = &Betting{Client: client}
 
 	// create account
-	c.Account = &Account{Client: c}
+	client.Account = &Account{Client: client}
 
 	// create streaming
-	c.Streaming = &streaming.Stream{}
+	stream, err := streaming.NewStream(streamingEndpoint, client.Certificates, cfg.AppKey)
+	if err != nil {
+		return nil, err
+	}
+	
+	client.Streaming = stream
 
-	return c, nil
+	return client, nil
 }
 
 // SessionExpired returns True if client not logged in or expired, betfair requires keep alive every 4hrs (20mins ITA)

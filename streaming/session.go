@@ -12,17 +12,17 @@ const (
 	failure = "FAILURE"
 )
 
-type Session struct {
-	conn         *TLSConnection
+type session struct {
+	conn         *tlsConnection
 	channels     *StreamChannels
-	eventHandler *EventHandler
+	eventHandler *eventHandler
 	scanner      *bufio.Scanner
-	stop         chan int
+	stopChan     chan int
 }
 
-func NewSession(destination string, certs *tls.Certificate, appKey string, sessionToken string, channels *StreamChannels) (*Session, error) {
-	session := new(Session)
-	TLSConnection, err := NewTLSConnection(destination, certs)
+func newSession(destination string, certs *tls.Certificate, appKey string, sessionToken string, channels *StreamChannels, marketCache *CachedMarkets, orderCache *CachedOrders) (*session, error) {
+	session := new(session)
+	TLSConnection, err := newTLSConnection(destination, certs)
 	if err != nil {
 		return nil, err
 	}
@@ -33,10 +33,10 @@ func NewSession(destination string, certs *tls.Certificate, appKey string, sessi
 	session.scanner = bufio.NewScanner(TLSConnection.conn)
 	session.scanner.Split(scanCRLF)
 
-	// Pass a pointer to our StreamChannels struct which are used for piping data back to the main goroutine
+	// Pass a pointer to our StreamChannels struct which is used for piping data back to the main goroutine
 	session.channels = channels
-	session.eventHandler = NewEventHandler(channels)
-	session.stop = make(chan int)
+	session.eventHandler = newEventHandler(channels, marketCache, orderCache)
+	session.stopChan = make(chan int)
 
 	err = session.authenticate(appKey, sessionToken)
 	if err != nil {
@@ -49,14 +49,14 @@ func NewSession(destination string, certs *tls.Certificate, appKey string, sessi
 	return session, nil
 }
 
-func (session *Session) Stop() {
+func (session *session) stop() {
 	// Stop the readPump/writePump goroutines
-	session.stop <- 1
+	session.stopChan <- 1
 	// Terminate TLS connection to stream endpoint
 	session.conn.Stop()
 }
 
-func (session *Session) authenticate(appKey string, sessionToken string) error {
+func (session *session) authenticate(appKey string, sessionToken string) error {
 
 	if session.conn == nil {
 		return &NoConnectionError{}
@@ -93,13 +93,13 @@ func (session *Session) authenticate(appKey string, sessionToken string) error {
 	return nil
 }
 
-func (session *Session) write(b []byte) (int, error) {
+func (session *session) write(b []byte) (int, error) {
 	// Every message is in json & terminated with a line feed (CRLF)
 	b = addCRLF(b)
 	return session.conn.Write(b)
 }
 
-func (session *Session) read() ([]byte, error) {
+func (session *session) read() ([]byte, error) {
 
 	session.scanner.Scan()
 
@@ -110,7 +110,7 @@ func (session *Session) read() ([]byte, error) {
 	return session.scanner.Bytes(), nil
 }
 
-func (session *Session) readPump() {
+func (session *session) readPump() {
 
 	if session.conn == nil {
 		err := new(NoConnectionError)
@@ -121,7 +121,7 @@ func (session *Session) readPump() {
 	for {
 		select {
 
-		case <-session.stop:
+		case <-session.stopChan:
 			return
 
 		default:
@@ -143,11 +143,11 @@ func (session *Session) readPump() {
 	}
 }
 
-func (session *Session) writePump() {
+func (session *session) writePump() {
 	for {
 		select {
 
-		case <-session.stop:
+		case <-session.stopChan:
 			return
 
 		case marketSubscriptionMessage := <-session.channels.marketSubscriptionRequest:

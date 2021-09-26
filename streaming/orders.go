@@ -4,58 +4,53 @@ import (
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
-type OrderHandler struct {
-	cache      OrderCache
+type orderHandler struct {
+	cache      CachedOrders
 	channels   *StreamChannels
-	InitialClk string
-	Clk        string
+	initialClk string
+	clk        string
 }
 
-func NewOrderHandler(channels *StreamChannels) *OrderHandler {
-	orderStream := new(OrderHandler)
-	orderStream.cache = make(OrderCache)
+func newOrderHandler(channels *StreamChannels, orderCache *CachedOrders) *orderHandler {
+	orderStream := new(orderHandler)
+	orderStream.cache = *orderCache
 	orderStream.channels = channels
 	return orderStream
 }
 
-func (handler *OrderHandler) OnSubscribe(orderChangeMessage models.OrderChangeMessage) {
+func (handler *orderHandler) OnSubscribe(orderChangeMessage models.OrderChangeMessage) {
 
 }
 
-func (handler *OrderHandler) OnResubscribe(orderChangeMessage models.OrderChangeMessage) {
+func (handler *orderHandler) OnResubscribe(orderChangeMessage models.OrderChangeMessage) {
 
 }
 
-func (orderHandler *OrderHandler) OnHeartbeat(orderChangeMessage models.OrderChangeMessage) {
+func (orderHandler *orderHandler) OnHeartbeat(orderChangeMessage models.OrderChangeMessage) {
 
 }
 
-func (handler *OrderHandler) OnUpdate(orderChangeMessage models.OrderChangeMessage) {
+func (handler *orderHandler) OnUpdate(orderChangeMessage models.OrderChangeMessage) {
 
-	if handler.InitialClk == "" {
-		handler.InitialClk = orderChangeMessage.Clk
+	if handler.initialClk == "" {
+		handler.initialClk = orderChangeMessage.Clk
 	}
 
-	handler.Clk = orderChangeMessage.Clk
+	handler.clk = orderChangeMessage.Clk
 
 	for _, orderMarketChange := range orderChangeMessage.Oc {
 
-		// Check if a cache for the given Market ID exists
-		_, found := handler.cache[orderMarketChange.ID]
-		if !found {
-			handler.cache[orderMarketChange.ID] = MarketOrderCache{MarketID: orderMarketChange.ID}
+		// Check if a cache for the given Market ID exists or if it's a Full Image (Notification to replace item in cache as opposed to just updating it)
+		// https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Exchange+Stream+API#ExchangeStreamAPI-OrderSubscriptionMessage
+
+		orderBookCache, found := handler.cache[orderMarketChange.ID]
+		if !found || orderMarketChange.FullImage {
+			orderBookCache := newOrderBookCache()
+			orderBookCache.LastPublishTime = orderChangeMessage.Pt
+			handler.cache[orderMarketChange.ID] = orderBookCache
 		}
 
-		// Check if a cache for the given MarketID/RunnerID combination exists
-		for _, orderRunnerChange := range orderMarketChange.Orc {
-
-			_, found = handler.cache[orderMarketChange.ID].RunnerOrders[int(orderRunnerChange.ID)]
-			if !found {
-				handler.cache[orderMarketChange.ID].RunnerOrders[int(orderRunnerChange.ID)] = RunnerOrderCache{}
-			}
-
-			// TODO: Update Cache
-
-		}
+		orderBookCache.update(orderMarketChange, orderChangeMessage.Pt)
+		handler.channels.OrderUpdate <- *orderBookCache.Snap()
 	}
 }

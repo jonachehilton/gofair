@@ -16,7 +16,7 @@ func TestTLSConnection(t *testing.T) {
 	cert, _ := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
 	
 	// Act
-	conn, _ := NewTLSConnection(IntegrationEndpoint, &cert)
+	conn, _ := newTLSConnection(IntegrationEndpoint, &cert)
 
 	// Assert
 	assert.NotNil(t, conn)

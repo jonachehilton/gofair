@@ -7,23 +7,23 @@ import (
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
-type TLSConnection struct {
+type tlsConnection struct {
 	ID   int32
 	conn *tls.Conn
 }
 
-func (conn *TLSConnection) Write(b []byte) (int, error) {
+func (conn *tlsConnection) Write(b []byte) (int, error) {
 	return conn.conn.Write(b)
 }
 
-func (conn *TLSConnection) Stop() {
+func (conn *tlsConnection) Stop() {
 	conn.conn.Close()
 	conn.conn = nil
 }
 
-func NewTLSConnection(destination string, certs *tls.Certificate) (*TLSConnection, error) {
+func newTLSConnection(destination string, certs *tls.Certificate) (*tlsConnection, error) {
 
-	connection := new(TLSConnection)
+	connection := new(tlsConnection)
 
 	cfg := &tls.Config{Certificates: []tls.Certificate{*certs}}
 	conn, err := tls.Dial("tcp", destination, cfg)

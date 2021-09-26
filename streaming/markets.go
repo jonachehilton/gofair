@@ -4,34 +4,34 @@ import (
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
-type MarketEventHandler struct {
+type marketEventHandler struct {
 	channels   *StreamChannels
-	cache      map[string]MarketCache
+	cache      CachedMarkets
 	initialClk string
 	clk        string
 }
 
-func NewMarketHandler(channels *StreamChannels) *MarketEventHandler {
-	marketStream := new(MarketEventHandler)
+func newMarketHandler(channels *StreamChannels, marketCache *CachedMarkets) *marketEventHandler {
+	marketStream := new(marketEventHandler)
 	marketStream.channels = channels
-	marketStream.cache = make(map[string]MarketCache)
+	marketStream.cache = *marketCache
 	return marketStream
 }
 
-func (handler *MarketEventHandler) OnSubscribe(changeMessage models.MarketChangeMessage) {
+func (handler *marketEventHandler) OnSubscribe(changeMessage models.MarketChangeMessage) {
 
 	response := new(MarketSubscriptionResponse)
 
 	for _, marketChange := range changeMessage.Mc {
-		marketCache := CreateMarketCache(&changeMessage, marketChange)
-		handler.cache[marketChange.ID] = *marketCache
+		marketCache := newMarketCache(&changeMessage, marketChange)
+		handler.cache[marketChange.ID] = marketCache
 		response.SubscribedMarketIDs = append(response.SubscribedMarketIDs, marketChange.ID)
 	}
 
 	handler.channels.MarketSubscriptionResponse <- *response
 }
 
-func (handler *MarketEventHandler) OnResubscribe(changeMessage models.MarketChangeMessage) {
+func (handler *marketEventHandler) OnResubscribe(changeMessage models.MarketChangeMessage) {
 
 	response := new(MarketSubscriptionResponse)
 
@@ -42,10 +42,10 @@ func (handler *MarketEventHandler) OnResubscribe(changeMessage models.MarketChan
 	handler.channels.MarketSubscriptionResponse <- *response
 }
 
-func (handler *MarketEventHandler) OnHeartbeat(changeMessage models.MarketChangeMessage) {
+func (handler *marketEventHandler) OnHeartbeat(changeMessage models.MarketChangeMessage) {
 }
 
-func (handler *MarketEventHandler) OnUpdate(changeMessage models.MarketChangeMessage) {
+func (handler *marketEventHandler) OnUpdate(changeMessage models.MarketChangeMessage) {
 
 	if handler.initialClk == "" {
 		handler.initialClk = changeMessage.Clk
@@ -59,8 +59,8 @@ func (handler *MarketEventHandler) OnUpdate(changeMessage models.MarketChangeMes
 			marketCache.UpdateCache(&changeMessage, marketChange)
 			handler.channels.MarketUpdate <- marketCache.Snap()
 		} else {
-			marketCache := CreateMarketCache(&changeMessage, marketChange)
-			handler.cache[marketChange.ID] = *marketCache
+			marketCache := newMarketCache(&changeMessage, marketChange)
+			handler.cache[marketChange.ID] = marketCache
 			handler.channels.MarketUpdate <- marketCache.Snap()
 		}
 	}

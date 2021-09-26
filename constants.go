@@ -1,22 +1,6 @@
 package gofair
 
 type OrderProjection string
-type PriceData string
-type MatchProjection string
-type MarketStatus string
-type PersistenceType string
-type OrderType string
-type OrderStatus string
-type ExecutionReportStatus string
-type InstructionReportStatus string
-type ExecutionReportErrorCode string
-
-// Side is the type associated with strings contained in the Side struct.
-type Side string
-
-// WeightConstant should be the type specified for const values relating to request limit calculations
-// https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Market+Data+Request+Limits
-type WeightConstant int
 
 // OrderProjectionEnum describes the orders you want to receive in the response.
 var OrderProjectionEnum = struct {
@@ -26,6 +10,8 @@ var OrderProjectionEnum = struct {
 	Executable:        "EXECUTABLE",
 	ExecutionComplete: "EXECUTION_COMPLETE",
 }
+
+type PriceData string
 
 // PriceDataEnum describes the basic price data you want to receive in the response.
 var PriceDataEnum = struct {
@@ -38,6 +24,8 @@ var PriceDataEnum = struct {
 	ExTraded:     "EX_TRADED",
 }
 
+type MatchProjection string
+
 // MatchProjectionEnum describes the matches you want to receive in the response.
 var MatchProjectionEnum = struct {
 	NoRollup, RolledUpByPrice, RolledUpByAvgPrice MatchProjection
@@ -46,6 +34,8 @@ var MatchProjectionEnum = struct {
 	RolledUpByPrice:    "ROLLED_UP_BY_PRICE",
 	RolledUpByAvgPrice: "ROLLED_UP_BY_AVG_PRICE",
 }
+
+type MarketStatus string
 
 // MarketStatusEnum describes the status of the market, for example OPEN, SUSPENDED, CLOSED (settled), etc.
 var MarketStatusEnum = struct {
@@ -57,6 +47,8 @@ var MarketStatusEnum = struct {
 	Closed:    "CLOSED",
 }
 
+type PersistenceType string
+
 // PersistenceTypeEnum describes what to do with the order at turn-in-play.
 var PersistenceTypeEnum = struct {
 	Lapse, Persist, MarketOnClose PersistenceType
@@ -66,6 +58,8 @@ var PersistenceTypeEnum = struct {
 	MarketOnClose: "MARKET_ON_CLOSE",
 }
 
+type OrderType string
+
 // OrderTypeEnum describes the BSP Order type.
 var OrderTypeEnum = struct {
 	Limit, LimitOnClose, MarketOnClose OrderType
@@ -74,6 +68,8 @@ var OrderTypeEnum = struct {
 	LimitOnClose:  "LIMIT_ON_CLOSE",
 	MarketOnClose: "MARKET_ON_CLOSE",
 }
+
+type OrderStatus string
 
 // OrderStatusEnum should generally be either EXECUTABLE (an unmatched amount remains) or EXECUTION_COMPLETE (no unmatched amount remains).
 var OrderStatusEnum = struct {
@@ -85,6 +81,9 @@ var OrderStatusEnum = struct {
 	Expired:           "EXPIRED",
 }
 
+// Side is the type associated with strings contained in the Side struct.
+type Side string
+
 // SideEnum indicates if the bet is a Back or a Lay.
 var SideEnum = struct {
 	Back, Lay Side
@@ -92,6 +91,10 @@ var SideEnum = struct {
 	Back: "BACK",
 	Lay:  "LAY",
 }
+
+// WeightConstant should be the type specified for const values relating to request limit calculations
+// https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Market+Data+Request+Limits
+type WeightConstant int
 
 // WeightEnum is a measure used by the Betfair Exchange API to describe the relative amount of data a particular type of request is expected to return.
 var WeightEnum = struct {
@@ -132,6 +135,8 @@ var WeightEnum = struct {
 	NotApplicable:           4,
 }
 
+type ExecutionReportStatus string
+
 // ExecutionReportStatusEnum describes the outcome of placing an order.
 var ExecutionReportStatusEnum = struct {
 	Success, Failure, ProcessedWithErrors, Timeout ExecutionReportStatus
@@ -142,6 +147,8 @@ var ExecutionReportStatusEnum = struct {
 	Timeout:             "TIMEOUT",
 }
 
+type InstructionReportStatus string
+
 // InstructionReportStatusEnum describes the outcome of a particular instruction being submitted.
 var InstructionReportStatusEnum = struct {
 	Success, Failure, Timeout InstructionReportStatus
@@ -150,6 +157,8 @@ var InstructionReportStatusEnum = struct {
 	Failure: "FAILURE",
 	Timeout: "TIMEOUT",
 }
+
+type ExecutionReportErrorCode string
 
 // ExecutionReportErrorCodeEnum describes the potential errors contained within a PlaceExecutionReport.
 var ExecutionReportErrorCodeEnum = struct {

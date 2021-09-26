@@ -31,20 +31,20 @@ type IOrderHandler interface {
 	OnUpdate(ChangeMessage models.OrderChangeMessage)
 }
 
-type EventHandler struct {
+type eventHandler struct {
 	Markets IMarketHandler
 	Orders IOrderHandler
 }
 
-func NewEventHandler(channels *StreamChannels) *EventHandler {
-	handler := new(EventHandler)
-	handler.Markets = NewMarketHandler(channels)
-	handler.Orders = NewOrderHandler(channels)
+func newEventHandler(channels *StreamChannels, marketCache *CachedMarkets, orderCache *CachedOrders) *eventHandler {
+	handler := new(eventHandler)
+	handler.Markets = newMarketHandler(channels, marketCache)
+	handler.Orders = newOrderHandler(channels, orderCache)
 	return handler
 }
 
 // onData passes a blob to the appropriate event handler based on the op code
-func (eh *EventHandler) onData(op string, data []byte) {
+func (eh *eventHandler) onData(op string, data []byte) {
 
 	switch op {
 	case connection:
@@ -58,14 +58,14 @@ func (eh *EventHandler) onData(op string, data []byte) {
 	}
 }
 
-func (stream *EventHandler) onConnection(data []byte) {
+func (stream *eventHandler) onConnection(data []byte) {
 }
 
-func (stream *EventHandler) onStatus(data []byte) {
+func (stream *eventHandler) onStatus(data []byte) {
 }
 
 // onMarketChangeMessage passes a MarketChange blob to the appropriate event handler based on the Change type
-func (eh *EventHandler) onMarketChangeMessage(data []byte) {
+func (eh *eventHandler) onMarketChangeMessage(data []byte) {
 
 	marketChangeMessage := new(models.MarketChangeMessage)
 
@@ -87,7 +87,7 @@ func (eh *EventHandler) onMarketChangeMessage(data []byte) {
 }
 
 // onOrderChangeMessage passes an OrderChange blob to the appropriate event handler based on the Change type
-func (eh *EventHandler) onOrderChangeMessage(data []byte) {
+func (eh *eventHandler) onOrderChangeMessage(data []byte) {
 
 	orderChangeMessage := new(models.OrderChangeMessage)
 

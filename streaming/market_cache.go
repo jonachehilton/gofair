@@ -6,7 +6,7 @@ import (
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
-func CreateMarketCache(changeMessage *models.MarketChangeMessage, marketChange *models.MarketChange) *MarketCache {
+func newMarketCache(changeMessage *models.MarketChangeMessage, marketChange *models.MarketChange) *MarketCache {
 	cache := &MarketCache{
 		&changeMessage.Pt,
 		marketChange.ID,
@@ -15,12 +15,12 @@ func CreateMarketCache(changeMessage *models.MarketChangeMessage, marketChange *
 		make(map[int64]RunnerCache),
 	}
 	for _, runnerChange := range marketChange.Rc {
-		cache.Runners[runnerChange.ID] = *CreateRunnerCache(runnerChange)
+		cache.Runners[runnerChange.ID] = *newRunnerCache(runnerChange)
 	}
 	return cache
 }
 
-func CreateRunnerCache(change *models.RunnerChange) *RunnerCache {
+func newRunnerCache(change *models.RunnerChange) *RunnerCache {
 
 	// create traded data structure
 	var traded Available
@@ -362,6 +362,8 @@ type MarketCache struct {
 	Runners          map[int64]RunnerCache
 }
 
+type CachedMarkets map[string]*MarketCache
+
 func (cache *MarketCache) UpdateCache(changeMessage *models.MarketChangeMessage, marketChange *models.MarketChange) {
 	*cache.PublishTime = changeMessage.Pt
 
@@ -376,7 +378,7 @@ func (cache *MarketCache) UpdateCache(changeMessage *models.MarketChangeMessage,
 			if runnerCache, ok := cache.Runners[runnerChange.ID]; ok {
 				runnerCache.UpdateCache(runnerChange)
 			} else {
-				cache.Runners[runnerChange.ID] = *CreateRunnerCache(runnerChange)
+				cache.Runners[runnerChange.ID] = *newRunnerCache(runnerChange)
 			}
 		}
 	}

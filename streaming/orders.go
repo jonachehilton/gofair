@@ -45,7 +45,7 @@ func (handler *orderHandler) OnUpdate(orderChangeMessage models.OrderChangeMessa
 
 		orderBookCache, found := handler.cache[orderMarketChange.ID]
 		if !found || orderMarketChange.FullImage {
-			orderBookCache := newOrderBookCache()
+			orderBookCache = newOrderBookCache()
 			orderBookCache.LastPublishTime = orderChangeMessage.Pt
 			handler.cache[orderMarketChange.ID] = orderBookCache
 		}

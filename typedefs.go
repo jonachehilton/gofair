@@ -2,37 +2,44 @@ package gofair
 
 import "time"
 
-type eventType struct {
+// EventType describes the type of event e.g. Football.
+type EventType struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
+// EventTypeResult is returned by a call to listEventTypes. (https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/listEventTypes)
 type EventTypeResult struct {
 	MarketCount int       `json:"marketCount"`
-	EventType   eventType `json:"eventType"`
+	EventType   EventType `json:"eventType"`
 }
 
+// Competition describes the competition that a fixture is associated with e.g. English Premier League.
 type Competition struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
+// CompetitionResults is returned by a call to listCompetitions. (https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/listCompetitions)
 type CompetitionResult struct {
 	MarketCount       int         `json:"marketCount"`
 	CompetitionRegion string      `json:"competitionRegion"`
 	Competition       Competition `json:"competition"`
 }
 
-type timeRange struct {
+// TimeRange specifies a period of time by providing 'to' and 'from' values.
+type TimeRange struct {
 	From time.Time `json:"from"`
 	To   time.Time `json:"to"`
 }
 
+// TimeRangeResult is returned by a call to listTimeRanges. (https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/listTimeRanges)
 type TimeRangeResult struct {
 	MarketCount int       `json:"marketCount"`
-	TimeRange   timeRange `json:"timeRange"`
+	TimeRange   TimeRange `json:"timeRange"`
 }
 
+// Event describes an event that could be a fixture within a competition e.g. Manchester United vs. Chelsea.
 type Event struct {
 	ID          string `json:"id"`
 	OpenDate    string `json:"openDate"`
@@ -42,32 +49,38 @@ type Event struct {
 	Venue       string `json:"venue"`
 }
 
+// EventResult is returned by a call to listEvents. (https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/listEvents)
 type EventResult struct {
 	MarketCount int   `json:"marketCount"`
 	Event       Event `json:"event"`
 }
 
+// MarketTypeResult is returned by a call to listMarketTypes. (https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/listMarketTypes)
 type MarketTypeResult struct {
 	MarketCount int    `json:"marketCount"`
 	MarketType  string `json:"marketType"`
 }
 
+// CountryResult is returned by a call to listCountries. (https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/listCountries)
 type CountryResult struct {
 	MarketCount int    `json:"marketCount"`
 	CountryCode string `json:"countryCode"`
 }
 
+// VenueResult is returned by a call to listVenues. (https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/listVenues)
 type VenueResult struct {
 	MarketCount int    `json:"marketCount"`
 	Venue       string `json:"venue"`
 }
 
+// PriceSize contains the Order Price (e.g. 1.51) and the Size of the Order (the amount staked).
 type PriceSize struct {
 	Price float32 `json:"price"`
 	Size  float32 `json:"size"`
 }
 
-type startingPrices struct {
+// StartingPrices contains the Betfair Starting Prices (BSP) for a given runner.
+type StartingPrices struct {
 	NearPrice         float32     `json:"nearPrice"`
 	FarPrice          float32     `json:"farPrice"`
 	BackStakeTaken    []PriceSize `json:"backStakeTaken"`
@@ -75,12 +88,14 @@ type startingPrices struct {
 	ActualSP          float32     `json:"actualSP"`
 }
 
-type exchangePrices struct {
+// ExchangePrices contains the prices that are available on the Exchange.
+type ExchangePrices struct {
 	AvailableToBack []PriceSize `json:"availableToBack"`
 	AvailableToLay  []PriceSize `json:"availableToLay"`
 	TradedVolume    []PriceSize `json:"tradedVolume"`
 }
 
+// Runner contains dynamic data about a runner for a given market.
 type Runner struct {
 	SelectionID       int                `json:"selectionId"`
 	Handicap          float32            `json:"handicap"`
@@ -89,14 +104,14 @@ type Runner struct {
 	LastPriceTraded   float32            `json:"lastPriceTraded"`
 	TotalMatched      float32            `json:"totalMatched"`
 	RemovalDate       time.Time          `json:"removalDate"`
-	StartingPrices    startingPrices     `json:"sp"`
-	ExchangePrices    exchangePrices     `json:"ex"`
+	StartingPrices    StartingPrices     `json:"sp"`
+	ExchangePrices    ExchangePrices     `json:"ex"`
 	Orders            []Order            `json:"orders"`
 	Matches           []Match            `json:"matches"`
 	MatchesByStrategy map[string][]Match `json:"matchesByStrategy"`
 }
 
-type marketCatalogueDescription struct {
+type MarketCatalogueDescription struct {
 	BettingType        string    `json:"bettingType"`
 	BSPMarket          bool      `json:"bspMarket"`
 	DiscountAllowed    bool      `json:"discountAllowed"`
@@ -114,10 +129,7 @@ type marketCatalogueDescription struct {
 	Clarifications     string    `json:"clarifications"`
 }
 
-type metadata struct {
-	RunnerID int `json:"runnerId"`
-}
-
+// RunnerCatalogue contains information about a runner for a given market.
 type RunnerCatalogue struct {
 	SelectionID  int     `json:"selectionId"`
 	RunnerName   string  `json:"runnerName"`
@@ -125,6 +137,7 @@ type RunnerCatalogue struct {
 	Handicap     float32 `json:"handicap"`
 }
 
+// ExBestOffersOverrides contains options to alter the default representation of best offer prices.
 type ExBestOffersOverrides struct {
 	BestPricesDepth          int     `json:"bestPricesDepth,omitempty"`
 	RollupModel              string  `json:"rollupModel,omitempty"`
@@ -133,6 +146,7 @@ type ExBestOffersOverrides struct {
 	RollupLiabilityFactor    int     `json:"rollupLiabilityFactor,omitempty"`
 }
 
+// PriceProjection allows the user to specify selection criteria for returning price data.
 type PriceProjection struct {
 	PriceData             []PriceData           `json:"priceData,omitempty"`
 	ExBestOffersOverrides ExBestOffersOverrides `json:"exBestOffersOverrides,omitempty"`
@@ -140,26 +154,31 @@ type PriceProjection struct {
 	RollOverStakes        bool                  `json:"rolloverStakes"`
 }
 
+// LimitOrder is a simple exchange bet for immediate execution.
 type LimitOrder struct {
 	Size            float32         `json:"size,omitempty"`
 	Price           float32         `json:"price,omitempty"`
 	PersistenceType PersistenceType `json:"persistenceType,omitempty"`
 }
 
+// LimitOnCloseOrder is to be used to place a new LIMIT_ON_CLOSE bet.
 type LimitOnCloseOrder struct {
 	Liability float32 `json:"liability,omitempty"`
 	Price     float32 `json:"price,omitempty"`
 }
 
+// MarketCloseOrder is to be used to place a MARKET_ON_CLOSE bet.
 type MarketOnCloseOrder struct {
 	Liability float32 `json:"liability,omitempty"`
 }
 
+// CancelInstruction is an Instruction to fully or partially cancel an order (only applies to LIMIT orders). The CancelInstruction report won't be returned for marketId level cancel instructions.
 type CancelInstruction struct {
 	BetID         string  `json:"betId"`
 	SizeReduction float32 `json:"sizeReduction,omitempty"`
 }
 
+// CancelExecutionReport is returned by a call to cancelOrders. (https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/cancelOrders)
 type CancelExecutionReport struct {
 	CustomerRef        string                    `json:"customerRef"`
 	Status             string                    `json:"status"`
@@ -168,6 +187,7 @@ type CancelExecutionReport struct {
 	InstructionReports []CancelInstructionReport `json:"instructionReports"`
 }
 
+// CancelInstructionReport is a response to a CancelInstruction.
 type CancelInstructionReport struct {
 	Status        string            `json:"status"`
 	ErrorCode     string            `json:"errorCode"`
@@ -176,6 +196,7 @@ type CancelInstructionReport struct {
 	CancelledDate time.Time         `json:"cancelledDate"`
 }
 
+// PlaceInstruction contains data required to place a new order.
 type PlaceInstruction struct {
 	OrderType          OrderType           `json:"orderType,omitempty"`
 	SelectionID        int                 `json:"selectionId,omitempty"`
@@ -187,6 +208,7 @@ type PlaceInstruction struct {
 	CustomerOrderRef   string              `json:"customerOrderRef,omitempty"`
 }
 
+// PlaceInstructionReport is a response to a PlaceInstruction.
 type PlaceInstructionReport struct {
 	Status              InstructionReportStatus `json:"status"`
 	ErrorCode           string                  `json:"errorCode"`
@@ -198,6 +220,7 @@ type PlaceInstructionReport struct {
 	SizeMatched         float32                 `json:"sizeMatched"`
 }
 
+// PlaceExecutionReport is returned by a call to placeOrders. (https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/placeOrders)
 type PlaceExecutionReport struct {
 	CustomerRef        string                   `json:"customerRef"`
 	Status             ExecutionReportStatus    `json:"status"`
@@ -206,6 +229,7 @@ type PlaceExecutionReport struct {
 	InstructionReports []PlaceInstructionReport `json:"instructionReports"`
 }
 
+// Order contains a range of information associated with placing an Order on the Exchange.
 type Order struct {
 	BetID               string    `json:"betId"`
 	OrderType           string    `json:"orderType"`
@@ -232,11 +256,12 @@ type KeyLineSelection struct {
 	Handicap    float32 `json:"handicap"`
 }
 
-// KeyLineDescription provides a description of a markets key line for valid market types
+// KeyLineDescription provides a description of a markets key line for valid market types.
 type KeyLineDescription struct {
 	KeyLine []KeyLineSelection `json:"keyLine"`
 }
 
+// Match contains data for an individual bet or rollup by price or avg price. Rollup depends on the requested MatchProjection.
 type Match struct {
 	BetID     string    `json:"betId"`
 	MatchID   string    `json:"matchId"`
@@ -254,8 +279,8 @@ type MarketCatalogue struct {
 	MarketStartTime            time.Time                  `json:"marketStartTime"`
 	Competition                Competition                `json:"competition"`
 	Event                      Event                      `json:"event"`
-	EventType                  eventType                  `json:"eventType"`
-	MarketCatalogueDescription marketCatalogueDescription `json:"description"`
+	EventType                  EventType                  `json:"eventType"`
+	MarketCatalogueDescription MarketCatalogueDescription `json:"description"`
 	Runners                    []RunnerCatalogue          `json:"runners"`
 }
 
@@ -323,6 +348,7 @@ type MarketDataFilter struct {
 	LadderLevels int64    `json:"ladderLevels"`
 }
 
+// CurrentOrderSummary contains data about a current order.
 type CurrentOrderSummary struct {
 	BetID               string          `json:"betId"`
 	MarketID            string          `json:"marketId"`
@@ -348,11 +374,13 @@ type CurrentOrderSummary struct {
 	CustomerStrategyRef string          `json:"customerOrderStrategy,omitempty"`
 }
 
+// CurrentOrderSummaryReport is container representing search results for current orders.
 type CurrentOrderSummaryReport struct {
 	CurrentOrders []CurrentOrderSummary `json:"currentOrders"`
 	MoreAvailable bool                  `json:"moreAvailable"`
 }
 
+// AccountFundsResponse contains data about the availability of funds.
 type AccountFundsResponse struct {
 	AvailableToBetBalance float64 `json:"availableToBetBalance"`
 	Exposure              float64 `json:"exposure"`

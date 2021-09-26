@@ -2,19 +2,19 @@ package gofair
 
 // Betting API Operations
 const (
-	listEventTypes = "listEventTypes/"
-	listCompetitions = "listCompetitions/"
-	listTimeRanges = "listTimeRanges/"
-	listEvents = "listEvents/"
-	listMarketTypes = "listMarketTypes/"
-	listCountries = "listCountries/"
-	listVenues = "listVenues/"
-	listMarketCatalogue = "listMarketCatalogue/"
-	listMarketBook = "listMarketBook/"
+	listEventTypes          = "listEventTypes/"
+	listCompetitions        = "listCompetitions/"
+	listTimeRanges          = "listTimeRanges/"
+	listEvents              = "listEvents/"
+	listMarketTypes         = "listMarketTypes/"
+	listCountries           = "listCountries/"
+	listVenues              = "listVenues/"
+	listMarketCatalogue     = "listMarketCatalogue/"
+	listMarketBook          = "listMarketBook/"
 	listMarketProfitAndLoss = "listMarketProfitAndLoss/"
-	placeOrders = "placeOrders/"
-	cancelOrders = "cancelOrders/"
-	listCurrentOrders = "listCurrentOrders/"
+	placeOrders             = "placeOrders/"
+	cancelOrders            = "cancelOrders/"
+	listCurrentOrders       = "listCurrentOrders/"
 )
 
 // Betting object
@@ -22,8 +22,8 @@ type Betting struct {
 	Client *Client
 }
 
-func (b *Betting) bettingRequest(endpoint string, params interface{}, response interface{}) error{
-	
+func (b *Betting) bettingRequest(endpoint string, params interface{}, response interface{}) error {
+
 	url := createURL(Endpoints.Betting, endpoint)
 
 	// make request

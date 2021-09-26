@@ -3,7 +3,6 @@ package streaming
 import (
 	"bytes"
 	"encoding/json"
-
 )
 
 func addCRLF(data []byte) []byte {

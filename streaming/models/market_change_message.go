@@ -390,4 +390,3 @@ func (m *MarketChangeMessage) UnmarshalBinary(b []byte) error {
 	*m = res
 	return nil
 }
-

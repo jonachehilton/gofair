@@ -1,7 +1,7 @@
 package gofair
 
 // Accounts API Operations
-const ( 
+const (
 	getAccountFunds = "getAccountFunds/"
 )
 
@@ -18,7 +18,7 @@ func (a *Account) GetAccountFunds() (AccountFundsResponse, error) {
 	params := struct {
 		Wallet string
 	}{
-		Wallet: "UK",	
+		Wallet: "UK",
 	}
 
 	var response AccountFundsResponse

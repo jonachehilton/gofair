@@ -2,6 +2,8 @@ package gofair
 
 type OrderProjection string
 
+// https://docs.developer.betfair.com/display/1smk3cen4v3lu3yomq5qye0ni/Betting+Enums
+
 // OrderProjectionEnum describes the orders you want to receive in the response.
 var OrderProjectionEnum = struct {
 	All, Executable, ExecutionComplete OrderProjection
@@ -212,4 +214,3 @@ var ExecutionReportErrorCodeEnum = struct {
 const (
 	MinimumStakeSizeGBP = 2.00
 )
-

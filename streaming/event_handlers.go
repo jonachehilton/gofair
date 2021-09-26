@@ -6,15 +6,15 @@ import (
 
 const (
 	// Ops
-	connection = "connection"
-	status = "status"
+	connection          = "connection"
+	status              = "status"
 	marketChangeMessage = "mcm"
-	orderChangeMessage = "ocm"
+	orderChangeMessage  = "ocm"
 
 	// Change types
-	subscribe = "SUB_IMAGE"
+	subscribe   = "SUB_IMAGE"
 	resubscribe = "RESUB_DELTA"
-	heartbeat = "HEARTBEAT"
+	heartbeat   = "HEARTBEAT"
 )
 
 type IMarketHandler interface {
@@ -33,7 +33,7 @@ type IOrderHandler interface {
 
 type eventHandler struct {
 	Markets IMarketHandler
-	Orders IOrderHandler
+	Orders  IOrderHandler
 }
 
 func newEventHandler(channels *StreamChannels, marketCache *CachedMarkets, orderCache *CachedOrders) *eventHandler {

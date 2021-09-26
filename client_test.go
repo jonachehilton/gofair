@@ -17,8 +17,8 @@ func TestOrders(t *testing.T) {
 
 	// Act
 	client.Streaming.SubscribeToOrders()
-	orderUpdate := <- client.Streaming.Channels.OrderUpdate
-	
+	orderUpdate := <-client.Streaming.Channels.OrderUpdate
+
 	// Assert
 	assert.NotNil(t, orderUpdate)
 }

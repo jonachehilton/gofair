@@ -2,16 +2,15 @@ package gofair
 
 import (
 	"crypto/tls"
-	"strings"
-	"time"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strings"
+	"time"
 
-	"github.com/belmegatron/gofair/streaming"
 	"github.com/belmegatron/gofair/config"
-
+	"github.com/belmegatron/gofair/streaming"
 )
 
 type Session struct {
@@ -107,7 +106,7 @@ func NewClient(cfg *config.Config, streamingEndpoint string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	client.Streaming = stream
 
 	return client, nil

@@ -14,7 +14,7 @@ func TestTLSConnection(t *testing.T) {
 	// Arrange
 	cfg, _ := config.LoadConfig("../config.json")
 	cert, _ := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
-	
+
 	// Act
 	conn, _ := newTLSConnection(IntegrationEndpoint, &cert)
 

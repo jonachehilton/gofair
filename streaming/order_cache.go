@@ -18,7 +18,7 @@ func newOrderBookCache() *OrderBookCache {
 }
 
 func (cache *OrderBookCache) updateMatchedLays(selectionID int64, update [][]float64) {
-	
+
 	if cache.Runners[selectionID] == nil {
 		cache.Runners[selectionID] = new(models.OrderRunnerChange)
 	}

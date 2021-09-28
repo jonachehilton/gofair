@@ -1,6 +1,7 @@
 package gofair
 
 import (
+	"log"
 	"testing"
 
 	"github.com/belmegatron/gofair/config"
@@ -10,10 +11,22 @@ import (
 
 func TestOrders(t *testing.T) {
 	// Arrange
-	cfg, _ := config.LoadConfig("config.json")
-	client, _ := NewClient(cfg, streaming.IntegrationEndpoint)
-	client.Login()
-	client.Streaming.Start(client.Session.SessionToken)
+	cfg, err := config.LoadConfig("config.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client, err := NewClient(cfg, streaming.IntegrationEndpoint)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = client.Login()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = client.Streaming.Start(client.Session.SessionToken)
 
 	// Act
 	client.Streaming.SubscribeToOrders()

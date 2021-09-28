@@ -15,6 +15,7 @@ type StreamChannels struct {
 	MarketUpdate               chan MarketBook
 	OrderUpdate                chan OrderBookCache
 	MarketSubscriptionResponse chan MarketSubscriptionResponse
+	OrderSubscriptionResponse  chan OrderSubscriptionResponse
 	Err                        chan error
 }
 

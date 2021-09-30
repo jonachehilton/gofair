@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"log"
 
@@ -10,13 +9,7 @@ import (
 	"github.com/belmegatron/gofair/streaming"
 )
 
-func prettyPrint(i interface{}) string {
-	s, _ := json.MarshalIndent(i, "", "\t")
-	return string(s)
-}
-
 func main() {
-
 	configPath := flag.String("config", "config.json", "Path to config.json")
 
 	// Load our config
@@ -39,12 +32,11 @@ func main() {
 	}
 	log.Println("Logged into Betfair Exchange.")
 
-	// Fire off a request to list all available EventTypes
-	filter := gofair.MarketFilter{}
-	event_types, err := client.Betting.ListEventTypes(filter)
+	// Check what our available balance is on the Exchange
+	response, err := client.Account.GetAccountFunds()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	log.Printf("Events: %v", prettyPrint(event_types))
+	
+	log.Printf("Available Funds: %v", response.AvailableToBetBalance)
 }

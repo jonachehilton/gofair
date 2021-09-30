@@ -80,6 +80,7 @@ func main() {
 	filter := models.MarketFilter{MarketIds: []string{marketID}}
 	dataFilter := models.MarketDataFilter{Fields: []string{string(gofair.PriceDataEnum.ExBestOffers), "EX_MARKET_DEF"}, LadderLevels: 1}
 	client.Streaming.SubscribeToMarkets(&filter, &dataFilter)
+	log.Printf("Sent subscription request for Market %v.", marketID)
 
 	marketSubscription := <-client.Streaming.Channels.MarketSubscriptionResponse
 	log.Printf("Subscribed to %v.", marketSubscription.SubscribedMarketIDs)

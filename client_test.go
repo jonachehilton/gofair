@@ -10,7 +10,6 @@ import (
 )
 
 func TestOrders(t *testing.T) {
-	// Arrange
 	cfg, err := config.LoadConfig("config.json")
 	if err != nil {
 		log.Fatal(err)
@@ -27,6 +26,9 @@ func TestOrders(t *testing.T) {
 	}
 
 	err = client.Streaming.Start(client.Session.SessionToken)
+	if err != nil  {
+		log.Fatal(err)
+	}
 
 	// Act
 	client.Streaming.SubscribeToOrders()

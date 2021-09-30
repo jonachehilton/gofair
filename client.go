@@ -91,17 +91,10 @@ func NewClient(cfg *config.Config, streamingEndpoint string) (*Client, error) {
 	}
 
 	client.Certificates = &cert
-
-	// set config
 	client.Config = cfg
-
-	// create betting
 	client.Betting = &Betting{Client: client}
-
-	// create account
 	client.Account = &Account{Client: client}
-
-	// create streaming
+	
 	stream, err := streaming.NewStream(streamingEndpoint, client.Certificates, cfg.AppKey)
 	if err != nil {
 		return nil, err

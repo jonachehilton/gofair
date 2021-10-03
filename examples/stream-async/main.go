@@ -56,7 +56,7 @@ func main() {
 	log.Println("Loaded config.json")
 
 	// Create a new Client object for interacting with the Exchange API. We are using the Streaming IntegrationEndpoint which is for testing.
-	client, err := gofair.NewClient(cfg, streaming.IntegrationEndpoint)
+	client, err := gofair.NewClient(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,7 +72,7 @@ func main() {
 	marketID := getRandomMarketID(client)
 
 	// Kick off our connection to the Betfair Exchange Stream API.
-	err = client.Streaming.Start(client.Session.SessionToken)
+	err = client.Streaming.Start(streaming.IntegrationEndpoint, client.Session.SessionToken)
 	if err != nil {
 		log.Fatal(err)
 	}

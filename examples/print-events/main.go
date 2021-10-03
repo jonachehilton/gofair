@@ -7,7 +7,6 @@ import (
 
 	"github.com/belmegatron/gofair"
 	"github.com/belmegatron/gofair/config"
-	"github.com/belmegatron/gofair/streaming"
 )
 
 func prettyPrint(i interface{}) string {
@@ -27,7 +26,7 @@ func main() {
 	log.Println("Loaded config.json")
 
 	// Create a new Client object which we will use for interacting with the Exchange API
-	client, err := gofair.NewClient(cfg, streaming.IntegrationEndpoint)
+	client, err := gofair.NewClient(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}

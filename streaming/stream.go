@@ -38,7 +38,6 @@ func newStreamChannels() *StreamChannels {
 
 type Stream struct {
 	requestUID int32
-	endpoint   string
 	certs      *tls.Certificate
 	appKey     string
 	session    *session
@@ -49,14 +48,9 @@ type Stream struct {
 }
 
 // NewStream generates a Stream object which can be subsequently used to connect to an Exchange Stream endpoint
-func NewStream(endpoint string, certs *tls.Certificate, appKey string) (*Stream, error) {
-
-	if endpoint != LiveEndpoint && endpoint != IntegrationEndpoint {
-		return nil, &EndpointError{}
-	}
+func NewStream(certs *tls.Certificate, appKey string) (*Stream, error) {
 
 	stream := new(Stream)
-	stream.endpoint = endpoint
 	stream.certs = certs
 	stream.appKey = appKey
 
@@ -68,9 +62,13 @@ func NewStream(endpoint string, certs *tls.Certificate, appKey string) (*Stream,
 }
 
 // Start performs the Connection and Authentication steps and initializes the read/write goroutines
-func (stream *Stream) Start(sessionToken string) error {
+func (stream *Stream) Start(endpoint string, sessionToken string) error {
 
-	session, err := newSession(stream.endpoint, stream.certs, stream.appKey, sessionToken, stream.Channels, &stream.MarketCache, &stream.OrderCache)
+	if endpoint != LiveEndpoint && endpoint != IntegrationEndpoint {
+		return &EndpointError{}
+	}
+
+	session, err := newSession(endpoint, stream.certs, stream.appKey, sessionToken, stream.Channels, &stream.MarketCache, &stream.OrderCache)
 	if err != nil {
 		return err
 	}

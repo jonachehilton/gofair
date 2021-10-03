@@ -80,7 +80,7 @@ func (c *Client) request(url string, params interface{}, v interface{}) error {
 }
 
 // NewClient creates a new Betfair client.
-func NewClient(cfg *config.Config, streamingEndpoint string) (*Client, error) {
+func NewClient(cfg *config.Config) (*Client, error) {
 
 	client := new(Client)
 	client.Session = new(Session)
@@ -95,7 +95,7 @@ func NewClient(cfg *config.Config, streamingEndpoint string) (*Client, error) {
 	client.Betting = &Betting{Client: client}
 	client.Account = &Account{Client: client}
 	
-	stream, err := streaming.NewStream(streamingEndpoint, client.Certificates, cfg.AppKey)
+	stream, err := streaming.NewStream(client.Certificates, cfg.AppKey)
 	if err != nil {
 		return nil, err
 	}

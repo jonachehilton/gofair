@@ -83,6 +83,6 @@ func main() {
 	log.Printf("Sent subscription request for Market %v.", marketID)
 
 	// Block until we receive a response to inform us that we have successfully subscribed.
-	marketSubscription := <-client.Streaming.Channels.MarketSubscriptionResponse
-	log.Printf("Subscribed to %v.", marketSubscription.SubscribedMarketIDs)
+	subscribedMarket := <-client.Streaming.Channels.MarketSubscription
+	log.Printf("Subscribed to %v.", subscribedMarket.MarketID)
 }

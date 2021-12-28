@@ -63,10 +63,15 @@ func main() {
 	log.Println("Created new gofair client.")
 
 	// Logging to the Exchange API will allow us to acquire a SessionToken.
-	_, err = client.Login()
+	loginResult, err := client.Login()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if loginResult.LoginStatus != "SUCCESS" {
+		log.Fatal(loginResult)
+	}
+	
 	log.Println("Logged into Betfair Exchange.")
 
 	marketID := getRandomMarketID(client)
@@ -89,8 +94,8 @@ func main() {
 				log.Printf("Received a market update for MarketID: %v", marketUpdate.MarketID)
 			case orderUpdate := <-client.Streaming.Channels.OrderUpdate:
 				log.Printf("Received an order update for MarketID: %v", orderUpdate.MarketID)
-			case marketSubscription := <-client.Streaming.Channels.MarketSubscriptionResponse:
-				log.Printf("Subscribed to Markets: %v", marketSubscription.SubscribedMarketIDs)
+			case marketSubscription := <-client.Streaming.Channels.MarketSubscription:
+				log.Printf("Subscribed to Markets: %v", marketSubscription.MarketID)
 			}
 		}
 	}(client)

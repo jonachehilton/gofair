@@ -55,4 +55,3 @@ func (handler *orderHandler) OnUpdate(orderChangeMessage models.OrderChangeMessa
 		handler.channels.OrderUpdate <- *orderBookCache.Snap()
 	}
 }
-q

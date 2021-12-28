@@ -18,35 +18,8 @@ func newMarketHandler(channels *StreamChannels, marketCache *CachedMarkets) *mar
 	return marketStream
 }
 
-func (handler *marketEventHandler) OnSubscribe(changeMessage models.MarketChangeMessage) {
-
-	response := new(MarketSubscriptionResponse)
-
-	for _, marketChange := range changeMessage.Mc {
-		marketCache := newMarketCache(&changeMessage, marketChange)
-		handler.cache[marketChange.ID] = marketCache
-		response.SubscribedMarketIDs = append(response.SubscribedMarketIDs, marketChange.ID)
-	}
-
-	handler.channels.MarketSubscriptionResponse <- *response
-}
-
-func (handler *marketEventHandler) OnResubscribe(changeMessage models.MarketChangeMessage) {
-
-	response := new(MarketSubscriptionResponse)
-
-	for _, marketChange := range changeMessage.Mc {
-		response.SubscribedMarketIDs = append(response.SubscribedMarketIDs, marketChange.ID)
-	}
-
-	handler.channels.MarketSubscriptionResponse <- *response
-}
-
-func (handler *marketEventHandler) OnHeartbeat(changeMessage models.MarketChangeMessage) {
-}
-
-func (handler *marketEventHandler) OnUpdate(changeMessage models.MarketChangeMessage) {
-
+func (handler *marketEventHandler) onChangeMessage(changeMessage models.MarketChangeMessage, outChan *chan MarketBook) {
+	
 	if handler.initialClk == "" {
 		handler.initialClk = changeMessage.Clk
 	}
@@ -55,13 +28,31 @@ func (handler *marketEventHandler) OnUpdate(changeMessage models.MarketChangeMes
 
 	for _, marketChange := range changeMessage.Mc {
 
-		if marketCache, ok := handler.cache[marketChange.ID]; ok {
+		var marketCache *MarketCache
+		var found bool
+
+		if marketCache, found = handler.cache[marketChange.ID]; found {
 			marketCache.UpdateCache(&changeMessage, marketChange)
-			handler.channels.MarketUpdate <- marketCache.Snap()
 		} else {
-			marketCache := newMarketCache(&changeMessage, marketChange)
+			marketCache = newMarketCache(&changeMessage, marketChange)
 			handler.cache[marketChange.ID] = marketCache
-			handler.channels.MarketUpdate <- marketCache.Snap()
 		}
+
+		*outChan <- marketCache.Snap()
 	}
+}
+
+func (handler *marketEventHandler) OnSubscribe(changeMessage models.MarketChangeMessage) {
+	handler.onChangeMessage(changeMessage, &handler.channels.MarketSubscription)
+}
+
+func (handler *marketEventHandler) OnResubscribe(changeMessage models.MarketChangeMessage) {
+	handler.onChangeMessage(changeMessage, &handler.channels.MarketSubscription)
+}
+
+func (handler *marketEventHandler) OnHeartbeat(changeMessage models.MarketChangeMessage) {
+}
+
+func (handler *marketEventHandler) OnUpdate(changeMessage models.MarketChangeMessage) {
+	handler.onChangeMessage(changeMessage, &handler.channels.MarketUpdate)
 }

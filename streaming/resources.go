@@ -44,5 +44,3 @@ type ExchangePrices struct {
 type MarketSubscriptionResponse struct {
 	SubscribedMarketIDs []string
 }
-
-type OrderSubscriptionResponse bool

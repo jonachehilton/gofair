@@ -12,11 +12,10 @@ type StreamChannels struct {
 	orderSubscriptionRequest  chan models.OrderSubscriptionMessage
 
 	// Incoming Responses
+	Err                chan error
+	MarketSubscription chan MarketBook
 	MarketUpdate       chan MarketBook
 	OrderUpdate        chan OrderBookCache
-	MarketSubscription chan MarketBook
-	OrderSubscription  chan OrderSubscriptionResponse
-	Err                chan error
 }
 
 func newStreamChannels() *StreamChannels {

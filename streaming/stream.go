@@ -13,7 +13,6 @@ type StreamChannels struct {
 
 	// Incoming Responses
 	Err                chan error
-	MarketSubscription chan MarketBook
 	MarketUpdate       chan MarketBook
 	OrderUpdate        chan OrderBookCache
 }
@@ -29,7 +28,6 @@ func newStreamChannels() *StreamChannels {
 	// Set up Incoming Response Channels
 	channels.MarketUpdate = make(chan MarketBook, 64)
 	channels.OrderUpdate = make(chan OrderBookCache, 64)
-	channels.MarketSubscription = make(chan MarketBook, 64)
 	channels.Err = make(chan error)
 
 	return channels

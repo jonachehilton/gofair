@@ -18,7 +18,7 @@ func newMarketHandler(channels *StreamChannels, marketCache *CachedMarkets) *mar
 	return marketStream
 }
 
-func (handler *marketEventHandler) onChangeMessage(changeMessage models.MarketChangeMessage, outChan *chan MarketBook) {
+func (handler *marketEventHandler) onChangeMessage(changeMessage models.MarketChangeMessage) {
 	
 	if handler.initialClk == "" {
 		handler.initialClk = changeMessage.Clk
@@ -38,21 +38,21 @@ func (handler *marketEventHandler) onChangeMessage(changeMessage models.MarketCh
 			handler.cache[marketChange.ID] = marketCache
 		}
 
-		*outChan <- marketCache.Snap()
+		handler.channels.MarketUpdate <- marketCache.Snap()
 	}
 }
 
 func (handler *marketEventHandler) OnSubscribe(changeMessage models.MarketChangeMessage) {
-	handler.onChangeMessage(changeMessage, &handler.channels.MarketSubscription)
+	handler.onChangeMessage(changeMessage)
 }
 
 func (handler *marketEventHandler) OnResubscribe(changeMessage models.MarketChangeMessage) {
-	handler.onChangeMessage(changeMessage, &handler.channels.MarketSubscription)
+	handler.onChangeMessage(changeMessage)
 }
 
 func (handler *marketEventHandler) OnHeartbeat(changeMessage models.MarketChangeMessage) {
 }
 
 func (handler *marketEventHandler) OnUpdate(changeMessage models.MarketChangeMessage) {
-	handler.onChangeMessage(changeMessage, &handler.channels.MarketUpdate)
+	handler.onChangeMessage(changeMessage)
 }

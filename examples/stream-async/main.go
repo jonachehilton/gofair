@@ -94,8 +94,6 @@ func main() {
 				log.Printf("Received a market update for MarketID: %v", marketUpdate.MarketID)
 			case orderUpdate := <-client.Streaming.Channels.OrderUpdate:
 				log.Printf("Received an order update for MarketID: %v", orderUpdate.MarketID)
-			case marketSubscription := <-client.Streaming.Channels.MarketSubscription:
-				log.Printf("Subscribed to Markets: %v", marketSubscription.MarketID)
 			}
 		}
 	}(client)

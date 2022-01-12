@@ -214,3 +214,21 @@ var ExecutionReportErrorCodeEnum = struct {
 const (
 	MinimumStakeSizeGBP = 2.00
 )
+
+type TimeInForce string
+
+var TimeInForceEnum = struct {
+	FillOrKill TimeInForce
+}{
+	FillOrKill:  "FILL_OR_KILL",
+}
+
+type BetTargetType string
+
+var BetTargetTypeEnum = struct {
+	BackersProfit,
+	Payout BetTargetType
+}{
+	BackersProfit: "BACKERS_PROFIT",
+	Payout: "PAYOUT",
+}

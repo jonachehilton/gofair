@@ -159,6 +159,10 @@ type LimitOrder struct {
 	Size            float32         `json:"size,omitempty"`
 	Price           float32         `json:"price,omitempty"`
 	PersistenceType PersistenceType `json:"persistenceType,omitempty"`
+	TimeInForce     TimeInForce     `json:"timeInForce,omitempty"`
+	MinFillSize     float32         `json:"minFillSize,omitempty"`
+	BetTargetType   BetTargetType   `json:"betTargetType,omitempty"`
+	BetTargetSize   float32         `json:"betTargetSize,omitempty"`
 }
 
 // LimitOnCloseOrder is to be used to place a new LIMIT_ON_CLOSE bet.

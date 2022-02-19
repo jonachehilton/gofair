@@ -212,7 +212,7 @@ var ExecutionReportErrorCodeEnum = struct {
 }
 
 const (
-	MinimumStakeSizeGBP = 2.00
+	MinimumStakeSizeGBP = 1.00
 )
 
 type TimeInForce string

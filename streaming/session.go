@@ -20,6 +20,8 @@ type session struct {
 	stopChan     chan int
 }
 
+const readBufferSize = 1024 * 1024
+
 func newSession(destination string, certs *tls.Certificate, appKey string, sessionToken string, channels *StreamChannels, marketCache *CachedMarkets, orderCache *CachedOrders) (*session, error) {
 	session := new(session)
 	TLSConnection, err := newTLSConnection(destination, certs)
@@ -32,6 +34,10 @@ func newSession(destination string, certs *tls.Certificate, appKey string, sessi
 	// Wrap the underlying connection with our byte scanner, this will read in bytes until a CRLF is encountered
 	session.scanner = bufio.NewScanner(TLSConnection.conn)
 	session.scanner.Split(scanCRLF)
+
+	// Set the initial buffer size to avoid 'token too long' errors
+	buf := make([]byte, 0, readBufferSize)
+	session.scanner.Buffer(buf, readBufferSize)
 
 	// Pass a pointer to our StreamChannels struct which is used for piping data back to the main goroutine
 	session.channels = channels

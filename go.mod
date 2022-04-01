@@ -1,6 +1,6 @@
 module github.com/belmegatron/gofair
 
-go 1.17
+go 1.18
 
 require (
 	github.com/go-openapi/errors v0.19.9

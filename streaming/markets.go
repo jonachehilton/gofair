@@ -19,7 +19,7 @@ func newMarketHandler(channels *StreamChannels, marketCache *CachedMarkets) *mar
 }
 
 func (handler *marketEventHandler) onChangeMessage(changeMessage models.MarketChangeMessage) {
-	
+
 	if handler.initialClk == "" {
 		handler.initialClk = changeMessage.Clk
 	}

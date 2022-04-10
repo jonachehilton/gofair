@@ -71,7 +71,7 @@ func main() {
 	if loginResult.LoginStatus != "SUCCESS" {
 		log.Fatal(loginResult)
 	}
-	
+
 	log.Println("Logged into Betfair Exchange.")
 
 	marketID := getRandomMarketID(client)

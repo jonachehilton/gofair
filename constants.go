@@ -220,7 +220,7 @@ type TimeInForce string
 var TimeInForceEnum = struct {
 	FillOrKill TimeInForce
 }{
-	FillOrKill:  "FILL_OR_KILL",
+	FillOrKill: "FILL_OR_KILL",
 }
 
 type BetTargetType string
@@ -230,5 +230,5 @@ var BetTargetTypeEnum = struct {
 	Payout BetTargetType
 }{
 	BackersProfit: "BACKERS_PROFIT",
-	Payout: "PAYOUT",
+	Payout:        "PAYOUT",
 }

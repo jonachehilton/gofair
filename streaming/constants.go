@@ -15,7 +15,7 @@ var MarketDataFilterEnum = struct {
 	SPTraded,
 	SPProjected MarketDataFilterFlag
 }{
-	ExBestOffersDisp: "EX_BEST_OFFERS_DISP", 
+	ExBestOffersDisp: "EX_BEST_OFFERS_DISP",
 	ExBestOffers:     "EX_BEST_OFFERS",
 	ExAllOffers:      "EX_ALL_OFFERS",
 	ExTraded:         "EX_TRADED",

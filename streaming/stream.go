@@ -6,15 +6,19 @@ import (
 	"github.com/belmegatron/gofair/streaming/models"
 )
 
+// MarketSubscriptionLimit is the max number of markets that can be subscribed to via the Betfair Stream API
+const MaxSubscriptionLimit = 200
+
 type StreamChannels struct {
 	// Outgoing Requests
 	marketSubscriptionRequest chan models.MarketSubscriptionMessage
 	orderSubscriptionRequest  chan models.OrderSubscriptionMessage
 
 	// Incoming Responses
-	Err                chan error
-	MarketUpdate       chan MarketBook
-	OrderUpdate        chan OrderBookCache
+	Err          chan error
+	MarketUpdate chan MarketBook
+	OrderUpdate  chan OrderBookCache
+	Status       chan models.StatusMessage
 }
 
 func newStreamChannels() *StreamChannels {
@@ -28,6 +32,7 @@ func newStreamChannels() *StreamChannels {
 	// Set up Incoming Response Channels
 	channels.MarketUpdate = make(chan MarketBook, 64)
 	channels.OrderUpdate = make(chan OrderBookCache, 64)
+	channels.Status = make(chan models.StatusMessage)
 	channels.Err = make(chan error)
 
 	return channels

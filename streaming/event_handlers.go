@@ -32,12 +32,14 @@ type IOrderHandler interface {
 }
 
 type eventHandler struct {
-	Markets IMarketHandler
-	Orders  IOrderHandler
+	Markets  IMarketHandler
+	Orders   IOrderHandler
+	channels *StreamChannels
 }
 
 func newEventHandler(channels *StreamChannels, marketCache *CachedMarkets, orderCache *CachedOrders) *eventHandler {
 	handler := new(eventHandler)
+	handler.channels = channels
 	handler.Markets = newMarketHandler(channels, marketCache)
 	handler.Orders = newOrderHandler(channels, orderCache)
 	return handler
@@ -62,6 +64,14 @@ func (stream *eventHandler) onConnection(data []byte) {
 }
 
 func (stream *eventHandler) onStatus(data []byte) {
+
+	statusMessage := new(models.StatusMessage)
+	err := statusMessage.UnmarshalJSON(data)
+	if err != nil {
+		return
+	}
+
+	stream.channels.Status <- *statusMessage
 }
 
 // onMarketChangeMessage passes a MarketChange blob to the appropriate event handler based on the Change type

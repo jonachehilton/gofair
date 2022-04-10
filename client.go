@@ -94,7 +94,7 @@ func NewClient(cfg *config.Config) (*Client, error) {
 	client.Config = cfg
 	client.Betting = &Betting{Client: client}
 	client.Account = &Account{Client: client}
-	
+
 	stream, err := streaming.NewStream(client.Certificates, cfg.AppKey)
 	if err != nil {
 		return nil, err

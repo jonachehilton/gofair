@@ -343,6 +343,7 @@ type MarketFilter struct {
 	InPlayOnly         bool             `json:"inPlayOnly,omitempty"`
 	MarketBettingTypes []string         `json:"marketBettingTypes,omitempty"`
 	MarketTypeCodes    []string         `json:"marketTypeCodes,omitempty"`
+	RaceTypes          []string         `json:"raceTypes,omitempty"`
 	MarketStartTime    *TimeRangeFilter `json:"marketStartTime,omitempty"`
 	WithOrders         string           `json:"withOrders,omitempty"`
 }

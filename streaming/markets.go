@@ -1,7 +1,7 @@
 package streaming
 
 import (
-	"github.com/belmegatron/gofair/streaming/models"
+	"github.com/jonachehilton/gofair/streaming/models"
 )
 
 type marketEventHandler struct {

@@ -5,8 +5,8 @@ import (
 	"flag"
 	"log"
 
-	"github.com/belmegatron/gofair"
-	"github.com/belmegatron/gofair/config"
+	"github.com/jonachehilton/gofair"
+	"github.com/jonachehilton/gofair/config"
 )
 
 func prettyPrint(i interface{}) string {

@@ -3,7 +3,7 @@ package streaming
 import (
 	"testing"
 
-	"github.com/belmegatron/gofair/streaming/models"
+	"github.com/jonachehilton/gofair/streaming/models"
 	"github.com/stretchr/testify/assert"
 )
 

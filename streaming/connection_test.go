@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/belmegatron/gofair/config"
+	"github.com/jonachehilton/gofair/config"
 )
 
 func TestTLSConnection(t *testing.T) {

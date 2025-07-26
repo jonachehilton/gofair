@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 
-	"github.com/belmegatron/gofair/streaming/models"
+	"github.com/jonachehilton/gofair/streaming/models"
 )
 
 type tlsConnection struct {
